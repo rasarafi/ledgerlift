@@ -135,19 +135,19 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist
 
       # Builds legacy from the upstream v1.7.2 tag and the new app from the Dockerfile, then
-      # waits for the healthchecks in compose.yaml: legacy installs itself on first start.
+      # waits for the healthchecks in compose.yaml: legacy installs itself on first start, and
+      # the new app then snapshots that install (App\Database\Pristine) and seeds both apps
+      # with the demo company (ledgerlift:demo-seed).
       - name: Start the stack
         run: docker compose up -d --build --wait --wait-timeout 600
 
-      # Schema and Parity run first, before anything logs into legacy: the Schema suite
-      # snapshots the legacy database as the installer left it (Tests\Support\Pristine),
-      # and a login writes to it.
       - name: Schema suite
         run: composer schema
 
       - name: Parity suite
         run: composer parity -- --log-junit "$RUNNER_TEMP/parity-junit.xml"
 
+      # Runs only when every step above succeeded, so every scenario counted here passed.
       - name: Summary
         if: success()
         run: |
@@ -167,8 +167,7 @@ jobs:
           {
             echo "### Parity against InvoicePlane v1.7.2"
             echo
-            echo "- Scenarios run: ${scenarios}"
-            echo "- Differences: 0"
+            echo "- All ${scenarios} parity scenarios passed: no unexplained differences"
             echo "- Intentional database differences (tests/Parity/intentional-differences.php): ${intentional}"
             echo "- Known differences outside the database (tests/Parity/known-differences.md): ${known_entries} entries, ${known_lines} lines"
           } >> "$GITHUB_STEP_SUMMARY"

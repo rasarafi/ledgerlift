@@ -26,7 +26,9 @@ deliberate live in `intentional-differences.php`.
   1.4.7 as the newest applied version (`019_1.4.7.sql` is applied last by timestamp).
 - **Create Quote** in the navbar is a plain link to legacy `quotes/index`; legacy opens a modal.
 - **Deleting a record.** Legacy v1.7.2 never deletes through `Admin_Controller::ensure_valid_post_request()`
-  (tax rates, families, units, payment methods, invoice groups, products, clients). CodeIgniter's global CSRF check removes `_ip_csrf` from `$_POST`, then
+  (tax rates, families, units, payment methods, invoice groups, products, clients; invoices, invoice taxes and
+  payments below). Its AJAX deletes do not call it and work on both apps, so they are not differences: an invoice item
+  (`invoices/ajax/delete_item`) and a client note (`clients/ajax/delete_client_note`). CodeIgniter's global CSRF check removes `_ip_csrf` from `$_POST`, then
   `verify_csrf_token()` looks for it there, finds nothing and refuses: legacy flashes the raw lang key
   `invalid_request`, redirects (to `<module>/index`, `families` for families) and keeps the row. Products behave like the rest
   (`Mdl_products::delete()` is a plain `DELETE ... WHERE product_id = id`, no other cleanup).
@@ -63,12 +65,19 @@ deliberate live in `intentional-differences.php`.
   `client_einvoicing_version` is rejected, as on an install with none) and `clients/ajax/get_latest` (nothing calls
   it) are not ported. The language list holds `english` only, the country list is the English one.
 - **Clients, links.** The client view's quotes tab is a link to the client's quotes on the legacy app, and the
-  invoices tab's "send email" link goes to the legacy mailer; legacy shows both in place.
+  invoices tab's "send email" link goes to the legacy mailer; legacy shows both in place. "Create Quote" (the client
+  view's button and the client list's option) is a plain link to the client on the legacy app; legacy opens its
+  create-quote modal (`href="#"`).
 - **Clients, crafted input.** `name_query` with an array `query` answers `[]` (legacy searches for the text
   "Array" after a PHP warning). A non-numeric list offset or tab page is a 404 here; legacy fails with a PHP error.
   A client country that is not in the country list is printed escaped (`partial_client_address.php` echoes it raw).
-- **Invoices, PDFs.** "Download PDF" (the list's option and the view's button) opens `invoices/generate_pdf/{id}` on the legacy
-  app, where the ledgerlift session does not exist: legacy asks for its own login first.
+- **Invoices, PDFs.** "Download PDF" (the list's option, the view's button and the dashboard's icon) opens
+  `invoices/generate_pdf/{id}` on the legacy app, where the ledgerlift session does not exist: legacy asks for its own login
+  first. The link carries no CSRF token: ledgerlift's belongs to another app and never matches legacy's cookie. Legacy's own
+  invoice view, list and dashboard add theirs (`_csrf_query()`: invoices/views/view.php:124, partial_invoice_table.php:91,
+  dashboard/views/index.php:252), and only then does
+  `mark_invoices_sent_pdf` number the invoice and mark it sent (Invoices.php:277-285). So with that setting on, a PDF opened
+  from ledgerlift streams without marking the invoice sent; marking on PDF happens only from the legacy screens.
 - **Invoices, not ported.** The invoice view has no custom fields, no e-invoicing (`einvoicing` stays unset), no sumex view
   (a sumex invoice shows the standard view, and `invoices/ajax/save` does not store its sumex fields; `invoices/ajax/create`
   still adds the sumex row for a sumex group), no responsive item list (`show_responsive_itemlist` is ignored) and no
@@ -104,7 +113,7 @@ deliberate live in `intentional-differences.php`.
 
 ## Legacy behaviour kept on purpose (not differences)
 
-These look like bugs, are what v1.7.2 does, and ledgerlift does the same so the parity suite can prove it:
+These look like bugs, are what v1.7.2 does, and ledgerlift does the same so the tests can prove it (the parity suite, except where noted):
 
 - **Payments of zero or less.** `validate_payment_amount()` only rejects an amount above the balance; there is no `amount > 0` check, so a
   zero or negative payment is accepted (a negative one raises the balance). A zero payment on an invoice whose total is zero also marks it
@@ -113,5 +122,7 @@ These look like bugs, are what v1.7.2 does, and ledgerlift does the same so the 
 - **Delete keeps `is_read_only`.** A paid invoice whose payment is deleted goes back to sent (2) but stays read-only.
 - **Dashboard period.** An unset or unknown `invoice_overview_period` totals this month but prints no period label (`lang()` of a missing
   key is empty; a fresh install has no such setting). "Last month" and "last quarter" compare with the year of today, so in January (or the
-  first quarter) they look for December (or Q4) of the current year and find nothing, instead of last year's.
+  first quarter) they look for December (or Q4) of the current year and find nothing, instead of last year's. The parity
+  suite cannot move MySQL's clock under legacy, so `tests/Feature/DashboardTest.php` pins it (`SET TIMESTAMP`) to January,
+  February and April dates and checks ledgerlift's totals against what legacy's SQL (Mdl_invoice_amounts.php:379-406) gives then.
 - **Dashboard clock.** The overview, the overdue panel and the due-date flag use MySQL's `NOW()` on both apps; the parity scenarios date their invoices relative to today.

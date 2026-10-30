@@ -32,7 +32,8 @@ be redesigned on day one. So ledgerlift does not get its own schema:
   columns, indexes and AUTO_INCREMENT. The Schema suite runs them on an empty database and
   compares the result with a fresh InvoicePlane install, including the rows the installer seeds.
   The only table ledgerlift adds is Laravel's own `migrations`.
-- Existing users log in with their existing passwords. Invoice PDF passwords are encrypted with
+- Existing users log in with their existing passwords (bcrypt; legacy MD5 accounts are refused,
+  see known-differences). Invoice PDF passwords are encrypted with
   the legacy install's key, so each app reads what the other wrote.
 - The two apps can run side by side on the same data. Navbar links to modules that are not
   ported yet go to the legacy app, so the migration can proceed one module at a time.
@@ -76,8 +77,8 @@ expects a failure, another runs legacy twice and expects only the masked columns
 | Login and logout | 3 |
 | Tax rates, families, units, payment methods, invoice groups | 24 |
 | Products and the product lookup | 19 |
-| Clients, notes and the client view | 17 |
-| Invoices: create, save, items, taxes, discounts, numbering, read-only, deletes, lists | 15 |
+| Clients, notes and the client view | 18 |
+| Invoices: create, save, items, taxes, discounts, numbering, read-only, deletes, lists | 14 |
 | Invoice calculator on seeded invoices | 5 |
 | Payments: modal, form, list, overpayment, deletes, European separators | 9 |
 | Dashboard and list filters | 3 |
@@ -100,7 +101,8 @@ Everything else that differs is outside the database and listed, with the legacy
 in [`tests/Parity/known-differences.md`](tests/Parity/known-differences.md). The ones that
 matter:
 
-- **Deletes work.** Legacy's delete is broken (see below); ledgerlift deletes.
+- **Record deletes work.** Legacy refuses every delete that goes through its second CSRF check
+  (see below); ledgerlift deletes.
 - **Ids in URLs must be numeric.** Legacy lets MySQL coerce `invoices/view/1-alert(1)` to
   invoice 1 and prints the raw segment into the page's scripts, a reflected XSS. ledgerlift
   answers 404 for any non-numeric id, offset or page.
@@ -115,29 +117,38 @@ matter:
 
 ## What the parity tests found
 
-**InvoicePlane v1.7.2 cannot delete anything.** In every module (tax rates, families, units,
-payment methods, invoice groups, products, clients, invoices, invoice taxes, payments), a delete
-POST with a valid CSRF token is refused and the row stays. CodeIgniter's global CSRF check
-verifies the token and removes `_ip_csrf` from `$_POST`; the controller's
-`ensure_valid_post_request()` then verifies it a second time, finds nothing and refuses with
-`invalid_request`. This was reproduced against the running legacy app.
+**InvoicePlane v1.7.2 refuses its own record deletes.** Every delete action that calls
+`Admin_Controller::ensure_valid_post_request()` is refused, even with a valid CSRF token, and the
+row stays. In the migrated modules that is deleting a tax rate, family, unit, payment method,
+invoice group, product, client, invoice, invoice tax or payment; outside them it also hits quotes,
+users, projects, tasks, custom fields and others. CodeIgniter's global CSRF check verifies the
+token and removes `_ip_csrf` from `$_POST`; `ensure_valid_post_request()` then verifies it a
+second time, finds nothing and refuses with `invalid_request`. This was reproduced against the
+running legacy app.
 
-ledgerlift deletes, as the legacy model code was written to. Since legacy refuses over HTTP,
-delete parity is proven at the model level: the scenario records both apps' answers, then
-applies legacy's own delete semantics (`Mdl_*::delete()`, `delete_orphans()`, and legacy's own
-recalculation where it has one) to the legacy database, and diffs the two end states. Those
-scenarios say "model-level" in their names.
+The AJAX deletes do not make that second check and work: deleting an invoice item
+(`invoices/ajax/delete_item`) or a client note (`clients/ajax/delete_client_note`) answers
+`{"success":1}` on legacy, and the parity suite compares them directly.
+
+For the refused deletes, ledgerlift deletes, as the legacy model code was written to. Since
+legacy refuses them over HTTP, their parity is proven at the model level: the scenario records
+both apps' answers, then applies legacy's own delete semantics (`Mdl_*::delete()`,
+`delete_orphans()`, and legacy's own recalculation where it has one) to the legacy database, and
+diffs the two end states. Those scenarios say "model-level" in their names.
 
 **PHP 8.2 and PHP 8.4 round money differently.** Legacy runs on PHP 8.2, whose `round()`
 pre-rounds to 15 significant digits; PHP 8.4 dropped that step. A sweep of 200,000
-discount-style values (`total / 100 × percent`, at 2 and 3 decimal places) found 104 values,
+discount-style values (`total / 100 × percent`, at 2 or 3 decimal places) finds 104 values,
 about 0.05%, where the two versions disagree, for `round()` and for `number_format()` alike.
 
 A concrete invoice: one item of 2,150.00 with a 43.87% discount. The discount is
 2150 / 100 × 43.87 = 943.20499999999993. PHP 8.2 rounds it to 943.21 and legacy stores a total
 of **1,206.79**; plain PHP 8.4 gives 943.20 and a total of 1,206.80. ledgerlift's `LegacyMath`
-pre-rounds to 15 significant digits the way PHP 8.2 did and matched it on all 200,000 values.
+pre-rounds to 15 significant digits the way PHP 8.2 did and matches it on all 200,000 values.
 This invoice is pinned in both the calculator tests and the parity suite.
+
+To rerun the sweep, `docker compose exec -T legacy php < scripts/rounding-sweep.php` prints PHP
+8.2's hashes; the same command with `new` prints PHP 8.4's, plus LegacyMath's, which equal 8.2's.
 
 The money maths is ported in legacy's exact order of operations, and MySQL's `DECIMAL` columns
 do the rounding on write, as they do for legacy.
@@ -188,8 +199,11 @@ composer install
 cp .env.example .env && php artisan key:generate
 ```
 
-The first build fetches InvoicePlane v1.7.2 from GitHub. Legacy installs itself on first start;
-`--wait` returns once both apps answer.
+The first build fetches InvoicePlane v1.7.2 from GitHub. Legacy installs itself on first start.
+ledgerlift's container then starts: it keeps a copy of that fresh install as the pristine
+reference, copies it into ledgerlift's database and adds the same made-up demo company to both
+(`php artisan ledgerlift:demo-seed`; it does nothing on later starts). `--wait` returns once both
+apps answer.
 
 | | URL |
 |---|---|
@@ -198,35 +212,34 @@ The first build fetches InvoicePlane v1.7.2 from GitHub. Legacy installs itself 
 
 Demo login on both: `admin@ledgerlift.test` / `ledgerlift-demo-1`.
 
-ledgerlift's database starts empty. The parity suite fills it: each scenario restores both
-databases to the fresh install plus the fixture company, so after `composer parity` both apps
-can be browsed on the same data.
-
 ```bash
 composer schema   # the Laravel migrations against a fresh InvoicePlane install
 composer parity   # every parity scenario against both running apps
 composer test     # Unit and Feature tests (Pest)
 ```
 
-Run `composer schema` before anything logs into legacy: it takes the legacy database, as the
-installer left it, as the pristine reference. CI runs Pint, Larastan, all three suites, and
-posts a summary of the parity run.
+Each parity scenario restores both databases to the fresh install plus the demo company, so the
+two apps show the same data after `composer parity` too. CI runs Pint, Larastan, all three
+suites, and posts a summary of the parity run.
 
 `docker compose down -v` resets everything. The databases are created by
 `docker/mysql-init.sql`, which MySQL runs only on an empty volume, so after changing it run
-`down -v` first.
+`down -v` first. `LEDGERLIFT_MYSQL_PORT`, `LEDGERLIFT_LEGACY_PORT` and `LEDGERLIFT_NEW_PORT`
+move the host ports; the test commands then need `DB_PORT`, `LEGACY_URL` and `NEW_URL` to match.
 
 MySQL 8 runs with a relaxed `sql_mode` (no `NO_ZERO_DATE`): InvoicePlane's installer writes
 `'0000-00-00'` dates, which MySQL 8's default mode rejects. Upstream targets MariaDB, whose
 default mode allows them. Both apps share the server and the mode.
 
-Last local run: 418 Unit and Feature tests (1,703 assertions), 6 Schema tests (150 assertions),
+Last local run: 431 Unit and Feature tests (1,755 assertions), 6 Schema tests (150 assertions),
 98 parity tests (763 assertions), all passing.
 
 ## Known legacy behaviours kept on purpose
 
-These look like bugs, but they are what v1.7.2 does, so ledgerlift does the same and the parity
-suite proves it:
+These look like bugs, but they are what v1.7.2 does, so ledgerlift does the same. The parity
+suite proves each of them except the last: both apps read the dashboard's clock from MySQL's
+`NOW()`, which the suite cannot move, so a Feature test pins it (`SET TIMESTAMP`) to January,
+February and April dates and checks that ledgerlift gives the totals legacy's SQL gives then:
 
 - **Zero and negative payments are accepted.** Legacy only rejects an amount above the balance.
   A negative payment raises the balance; a zero payment on a zero-total invoice marks it paid,
@@ -240,7 +253,8 @@ suite proves it:
 - **Deleting a payment keeps `is_read_only`.** A paid invoice goes back to sent but stays
   read-only.
 - **"Last month" and "last quarter" on the dashboard** compare with the current year, so in
-  January (or the first quarter) they find nothing.
+  January (or the first quarter) they look at December (or Q4) of this year and find nothing
+  from last year.
 
 ## Credits
 
