@@ -33,16 +33,16 @@ final class LegacyModel
     }
 
     /**
-     * Mdl_payments::delete() (Mdl_payments.php:417-447) in three parts, so a scenario can put legacy's own
-     * recalculation (:431) between them: this deletes the row (:426), paidBackToSent() follows the
-     * recalculation (:439-443) and deleteOrphans() ends it (:446).
+     * Mdl_payments::delete() (Mdl_payments.php:171-201) in three parts, so a scenario can put legacy's own
+     * recalculation (:185) between them: this deletes the row (:180), paidBackToSent() follows the
+     * recalculation (:193-197) and deleteOrphans() ends it (:200).
      */
     public static function deletePayment(Connection $db, int $paymentId): void
     {
         $db->statement('DELETE FROM ip_payments WHERE ip_payments.payment_id = ?', [$paymentId]);
     }
 
-    /** Mdl_payments.php:439-443: a paid invoice goes back to sent; is_read_only is not touched. */
+    /** Mdl_payments.php:193-197: a paid invoice goes back to sent; is_read_only is not touched. */
     public static function paidBackToSent(Connection $db, int $invoiceId): void
     {
         $db->statement('UPDATE ip_invoices SET invoice_status_id = 2 WHERE invoice_id = ? AND invoice_status_id = 4', [$invoiceId]);

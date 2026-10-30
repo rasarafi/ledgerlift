@@ -44,9 +44,9 @@ deliberate live in `intentional-differences.php`.
   by legacy's own recalculation (an unchanged Save), to the legacy database (tests/Parity/Support/LegacyModel.php).
   Payments too: legacy refuses `payments/delete/{id}` (redirect `payments`) with `invalid_request`. Ledgerlift deletes the payment, recalculates the
   invoice, moves a paid invoice (4) back to sent (2) leaving `is_read_only` as it is, sweeps the orphans (`ip_payment_custom` rows of the payment
-  go), and flashes "Record successfully deleted", as `Mdl_payments::delete()` (Mdl_payments.php:417-447) was written to. The scenario labels the
+  go), and flashes "Record successfully deleted", as `Mdl_payments::delete()` (Mdl_payments.php:171-201) was written to. The scenario labels the
   legacy side "model-level": it deletes the row by SQL, lets legacy recalculate through the `invoices/ajax/delete_item` of a zero-price
-  placeholder item, applies the 4 → 2 rule by SQL (Mdl_payments.php:439-443) and runs `delete_orphans()`. A payment id that does not exist is a
+  placeholder item, applies the 4 → 2 rule by SQL (Mdl_payments.php:193-197) and runs `delete_orphans()`. A payment id that does not exist is a
   no-op here (legacy would fail reading it).
 - **Stale session posts.** A POST to an admin URL with a valid login-page token but no login redirects
   to the login page on legacy (its CSRF cookie outlives the session); ledgerlift answers 403, its token
@@ -103,6 +103,6 @@ These look like bugs, are what v1.7.2 does, and ledgerlift does the same so the 
 
 - **Payments of zero or less.** `validate_payment_amount()` only rejects an amount above the balance; there is no `amount > 0` check, so a
   zero or negative payment is accepted (a negative one raises the balance). A zero payment on an invoice whose total is zero also marks it
-  paid, straight from draft (`paid >= total`, Mdl_payments.php:391).
+  paid, straight from draft (`paid >= total`, Mdl_payments.php:145).
 - **Payments can be moved.** The edit form posts `invoice_id`; the posted invoice is the one validated, saved to and recalculated.
 - **Delete keeps `is_read_only`.** A paid invoice whose payment is deleted goes back to sent (2) but stays read-only.

@@ -39,7 +39,7 @@ function ppayInvoice(AppClient $app, Connection $db, array $create = []): int
 }
 
 /**
- * The modal's post (views/payments/modal_add_payment.php:191-197): the raw answer.
+ * The modal's post (views/payments/modal_add_payment.php:13-19): the raw answer.
  *
  * @param  array<string, string>  $post
  */
@@ -217,7 +217,7 @@ it('rejects an overpayment with the same error JSON, accepts zero and negative a
             'unknown invoice' => ppayAdd($app, 9999, '5'),
             'text amount' => ppayAdd($app, $id, 'abc'),
             'array note' => ppayAdd($app, $id, '1', ['payment_note' => ['x', 'y']]),
-            // Mdl_payments.php:391: paid >= total (0 >= 0) sets status paid directly, from a draft; the calculator alone would not.
+            // Mdl_payments.php:145: paid >= total (0 >= 0) sets status paid directly, from a draft; the calculator alone would not.
             'zero invoice' => (function () use ($app, $db) {
                 $zero = iparCreate($app)['id'];
 
@@ -265,21 +265,30 @@ it('deletes a payment: ledgerlift for real, legacy by its model-level delete; pa
         $steps = ['before' => ppayState($app, $db, $id)];
 
         foreach ([[2, $id], [3, $viewed]] as [$paymentId, $invoiceId]) {
+            $deletePlaceholder = fn () => $app->post("invoices/ajax/delete_item/$invoiceId", ['item_id' => (string) $placeholders[$invoiceId]], ajax: true)->json('success');
+
+            if ($side === 'new') {
+                // Only ledgerlift's delete may recalculate after the payment goes, so the placeholder is removed (and the invoice
+                // recalculated with the payment still there) before it: a missing recalculation or 4 → 2 shows in the diff.
+                expect($deletePlaceholder())->toBe(1);
+            }
+
             $delete = $app->post("payments/delete/$paymentId");
             $answers[$side][$paymentId] = [$delete->status(), $app->location(), ppayList($app)['flash']];
 
             if ($side === 'legacy') {
-                // Mdl_payments::delete() (Mdl_payments.php:417-447): the row, legacy's own recalculation (here the placeholder's
+                // Mdl_payments::delete() (Mdl_payments.php:171-201): the row, legacy's own recalculation (here the placeholder's
                 // invoices/ajax/delete_item), 4 → 2, then delete_orphans().
                 LegacyModel::deletePayment($db, $paymentId);
-                expect($app->post("invoices/ajax/delete_item/$invoiceId", ['item_id' => (string) $placeholders[$invoiceId]], ajax: true)->json('success'))->toBe(1);
+                expect($deletePlaceholder())->toBe(1);
                 LegacyModel::paidBackToSent($db, $invoiceId);
                 LegacyModel::deleteOrphans($db);
-            } else {
-                $app->post("invoices/ajax/delete_item/$invoiceId", ['item_id' => (string) $placeholders[$invoiceId]], ajax: true);
             }
 
-            $steps["after $paymentId"] = ppayState($app, $db, $invoiceId);
+            $state = ppayState($app, $db, $invoiceId);
+            // Which flash is left over depends on the order of the two deletes, not on what they did.
+            unset($state['view']['flash']);
+            $steps["after $paymentId"] = $state;
         }
 
         $steps['custom rows'] = $db->table('ip_payment_custom')->count();
@@ -347,7 +356,7 @@ it('fills the modal and the form with the invoice default payment method, lockin
             'form' => ppayForm($app),
         ];
 
-        // The form posts its method as a hidden field once an invoice with one is chosen (form.php:35-43).
+        // The form posts its method as a hidden field once an invoice with one is chosen (form.php:13-19).
         $steps['add on form'] = $app->post('payments/form', ['btn_submit' => '1', 'invoice_id' => (string) $withMethod, 'payment_date' => '10/15/2026', 'payment_amount' => '90.50', 'payment_method_id' => '2', 'payment_note' => 'form'])->status();
         $steps['form location'] = $app->location();
         $steps['edit form'] = ppayForm($app, 'payments/form/1');
@@ -389,9 +398,22 @@ it('saves and edits payments on the form, shows its errors, and cancels', functi
             'edit list' => ppayList($app),
             'unknown form' => ppayForm($app, 'payments/form/9999'),
             'edit unknown' => $form(['payment_id' => '9999', 'payment_amount' => '1'] + $post, 'payments/form/9999'),
-            // Payments.php:143-145 and Mdl_payments.php:351-353 read a payment that is not there: the form shows empty fields.
+            // Payments.php:143-145 and Mdl_payments.php:104-108 read a payment that is not there: the form shows empty fields.
             'edit unknown ok' => $form(['payment_id' => '9999', 'invoice_id' => (string) $other, 'payment_amount' => '10'] + $post, 'payments/form/9999'),
             'edit unknown state' => ppayState($app, $db, $other),
+            // CI stops a field at its first failing rule (Form_validation.php, _execute()'s `return`): one error for the amount, not two.
+            'empty amount, unknown invoice' => $form(['payment_amount' => '', 'invoice_id' => '9999'] + $post),
+            'empty amount, negative balance' => (function () use ($app, $db, $form, $post) {
+                $negative = iparCreate($app)['id'];
+                $rows = [['item_name' => 'Work', 'item_quantity' => '1', 'item_price' => '100.00']];
+                iparSave($app, $negative, ['invoice_number' => (string) $negative, 'invoice_status_id' => '2', 'items' => iparItems($negative, $rows)]);
+                ppayAdd($app, $negative, '100.00');
+                // The price drops under what was paid: the balance is -50.00, and an empty amount (0) is above it.
+                $rows[0]['item_price'] = '50.00';
+                iparSave($app, $negative, ['invoice_number' => (string) $negative, 'invoice_status_id' => '2', 'items' => iparItems($negative, iparSavedItems($db, $negative, $rows))]);
+
+                return [ppayStored($db)['invoices'][2], $form(['payment_amount' => '', 'invoice_id' => (string) $negative] + $post)];
+            })(),
         ];
 
         return $steps;
@@ -402,7 +424,11 @@ it('saves and edits payments on the form, shows its errors, and cancels', functi
         ->and($result->legacy['too high']['flash'])->not->toBe([])
         ->and($result->legacy['edit']['location'])->toBe('payments')
         ->and($result->legacy['after edit']['stored']['invoices'][0])->toMatchArray(['invoice_status_id' => 4, 'is_read_only' => 1, 'payment_method' => 2])
-        ->and($result->legacy['unknown form']['status'])->toBe(404);
+        ->and($result->legacy['unknown form']['status'])->toBe(404)
+        ->and($result->legacy['empty amount, negative balance'][0])->toMatchArray(['invoice_balance' => '-50.00'])
+        // One error, from the amount's callback ("cannot exceed"), not that and "required" too.
+        ->and(array_filter($result->legacy['empty amount, negative balance'][1]['flash'], fn (string $text) => str_contains($text, 'Payment amount cannot exceed')))->toHaveCount(1)
+        ->and(array_filter($result->legacy['empty amount, negative balance'][1]['flash'], fn (string $text) => str_contains($text, 'field is required')))->toBeEmpty();
 });
 
 it('lists payments in pages of default_list_limit, newest first, with the same pager and links', function (array $settings) {

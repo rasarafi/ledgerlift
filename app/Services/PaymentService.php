@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * What the payments module writes, in legacy's order: Mdl_payments::save() and delete()
- * (Mdl_payments.php:122-156, 417-447). Validation and the flash messages are the controllers'.
+ * (Mdl_payments.php:122-156, 171-201). Validation and the flash messages are the controllers'.
  */
 final class PaymentService
 {
@@ -20,7 +20,7 @@ final class PaymentService
     ) {}
 
     /**
-     * validate_payment_amount() (Mdl_payments.php:336-363): what a payment on the invoice may be at most.
+     * validate_payment_amount() (Mdl_payments.php:90-117): what a payment on the invoice may be at most.
      * The balance, plus the payment's own amount when it is being edited. Null when the invoice has no
      * amounts row, where legacy fails without a message.
      */
@@ -34,7 +34,7 @@ final class PaymentService
 
         $balance = (float) $amounts->invoice_balance;
 
-        // :350 a truthy id (PHP: not '' and not '0'); a payment that does not exist adds nothing.
+        // :104 a truthy id (PHP: not '' and not '0'); a payment that does not exist adds nothing.
         if ($paymentId && is_scalar($paymentId)) {
             $balance += (float) DB::table('ip_payments')->where('payment_id', $paymentId)->value('payment_amount');
         }
@@ -67,7 +67,7 @@ final class PaymentService
     }
 
     /**
-     * Mdl_payments::delete() (:417-447): the payment goes, the invoice is recalculated, a paid invoice goes
+     * Mdl_payments::delete() (:171-201): the payment goes, the invoice is recalculated, a paid invoice goes
      * back to sent (is_read_only stays), then the orphans are swept.
      */
     public function delete(int $paymentId): void
@@ -87,7 +87,7 @@ final class PaymentService
     }
 
     /**
-     * Mdl_payments::save() (:368-402) with db_array() (:407-415): the date and the amount are converted,
+     * Mdl_payments::save() (:122-156) with db_array() (:161-169): the date and the amount are converted,
      * the row is written, the invoice recalculated, a settled invoice (paid >= total) set to paid, and the
      * invoice recalculated again, which is what makes it read-only.
      *
@@ -108,10 +108,15 @@ final class PaymentService
         $invoiceId = (int) ($data['invoice_id'] ?? 0);
         $this->calculator->recalculateInvoice($invoiceId);
 
-        // :381-395 calculate() has just written the amounts row.
         $amounts = DB::table('ip_invoice_amounts')->where('invoice_id', $invoiceId)->first(['invoice_paid', 'invoice_total']);
 
-        if ((float) $amounts?->invoice_paid >= (float) $amounts?->invoice_total) {
+        // :137-139 no amounts row: legacy returns here, without the status or the second recalculation.
+        if ($amounts === null) {
+            return $paymentId;
+        }
+
+        // :145-149 a settled invoice is paid (the calculator alone would not set it for a zero total).
+        if ((float) $amounts->invoice_paid >= (float) $amounts->invoice_total) {
             DB::table('ip_invoices')->where('invoice_id', $invoiceId)->update(['invoice_status_id' => 4]);
         }
 

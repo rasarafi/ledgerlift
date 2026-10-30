@@ -33,7 +33,10 @@ abstract class LegacyFormRequest extends FormRequest
         // An array where a field is expected counts as an empty field in CI.
         $data = array_map(fn (mixed $value) => is_array($value) ? null : $value, $this->post());
 
-        return Validator::make($data, $this->rules(), $this->messages() + ['required' => 'The :attribute field is required.'], $this->attributes());
+        // Form_validation::_execute() returns at a field's first failing rule: no further rule of that field runs.
+        $rules = array_map(fn (string|array $rule) => is_array($rule) ? ['bail', ...$rule] : ($rule === '' ? 'bail' : 'bail|'.$rule), $this->rules());
+
+        return Validator::make($data, $rules, $this->messages() + ['required' => 'The :attribute field is required.'], $this->attributes());
     }
 
     /**

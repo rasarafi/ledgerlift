@@ -48,7 +48,7 @@ function paySetting(string $key, string $value): void
     DB::table('ip_settings')->insert(['setting_key' => $key, 'setting_value' => $value]);
 }
 
-/** The modal's post (views/payments/modal_add_payment.php:191-197): the raw body. */
+/** The modal's post (views/payments/modal_add_payment.php:13-19): the raw body. */
 function payAdd(object $test, int $invoiceId, string $amount, array $post = []): string
 {
     return $test->continueSession()->post('/payments/ajax/add', $post + [
@@ -130,7 +130,7 @@ describe('payments', function () {
             ->and(payInvoice($this->invoiceId))->toMatchArray(['invoice_paid' => '-25.00', 'invoice_balance' => '125.00', 'invoice_status_id' => 2]);
     });
 
-    it('lets a zero payment settle an invoice whose total is zero (paid >= total, Mdl_payments.php:391)', function () {
+    it('lets a zero payment settle an invoice whose total is zero (paid >= total, Mdl_payments.php:145)', function () {
         $zero = paySeedInvoice('0.00', 1, 'INV-0');
 
         payAdd($this, $zero, '0');
@@ -146,6 +146,21 @@ describe('payments', function () {
             ->and(payAdd($this, $this->invoiceId, ''))->toBe('{"success":0,"validation_errors":{"payment_amount":"<p>The Payment field is required.<\/p>"}}')
             ->and(payAdd($this, 9999, '5'))->toContain('(validate_payment_amount)')
             ->and(DB::table('ip_payments')->count())->toBe(0);
+    });
+
+    it('shows one error for the amount, not two, on a form with an empty amount and a balance below zero (CI stops at a field\'s first failing rule)', function () {
+        $invoice = paySeedInvoice('50.00', 2, 'INV-NEG');
+        DB::table('ip_invoice_amounts')->where('invoice_id', $invoice)->update(['invoice_paid' => '100.00', 'invoice_balance' => '-50.00']);
+        $post = ['btn_submit' => '1', 'invoice_id' => (string) $invoice, 'payment_date' => '10/15/2026', 'payment_amount' => '', 'payment_method_id' => '', 'payment_note' => ''];
+
+        $page = $this->continueSession()->post('/payments/form', $post)->assertOk();
+        expect(substr_count($page->getContent(), 'Payment amount cannot exceed invoice balance.'))->toBe(1);
+        $page->assertDontSee('field is required');
+
+        // An unknown invoice: the callback's own failure, and again only that one.
+        $page = $this->continueSession()->post('/payments/form', ['invoice_id' => '9999'] + $post)->assertOk();
+        expect(substr_count($page->getContent(), '(validate_payment_amount)'))->toBe(1);
+        $page->assertDontSee('field is required');
     });
 
     it('reads the amount with the configured separators: 500,5 is 500.50', function () {

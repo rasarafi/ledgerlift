@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
 /**
- * Mdl_payments::validate_payment_amount() (Mdl_payments.php:336-363): the amount may not exceed the
+ * Mdl_payments::validate_payment_amount() (Mdl_payments.php:90-117): the amount may not exceed the
  * invoice's balance, to which the edited payment's own amount is added back. There is no lower bound.
  * CI runs a callback rule before `required` and on an empty amount too (Form_validation::_prepare_rules()),
  * so this rule is implicit and goes first.

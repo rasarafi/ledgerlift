@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use App\Rules\PaymentAmount;
 use Illuminate\Support\Arr;
 
-/** Mdl_payments::validation_rules() (Mdl_payments.php:302-329) */
+/** Mdl_payments::validation_rules() (Mdl_payments.php:56-83) */
 class PaymentRequest extends LegacyFormRequest
 {
     public function rules(): array
