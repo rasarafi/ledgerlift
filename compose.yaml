@@ -68,6 +68,8 @@ services:
       APP_URL: http://localhost:8092
       # TEST-ONLY key, same caveat as the legacy ENCRYPTION_KEY above.
       APP_KEY: base64:bGVkZ2VybGlmdC10ZXN0LW9ubHktYXBwLWtleS0wMDE=
+      # The legacy ENCRYPTION_KEY: invoice PDF passwords are encrypted with it, and both apps read each other's.
+      ENCRYPTION_KEY: bGVkZ2VybGlmdC10ZXN0LW9ubHktbGVnYWN5LWtleSE=
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: "3306"

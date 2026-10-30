@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\LegacyCrypt;
 use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -14,6 +15,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(Settings::class);
+        $this->app->singleton(LegacyCrypt::class, fn () => new LegacyCrypt((string) config('ledgerlift.encryption_key')));
     }
 
     /**

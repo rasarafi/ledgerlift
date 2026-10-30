@@ -26,6 +26,8 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- TEST-ONLY: the legacy container's ENCRYPTION_KEY (compose.yaml), so tests read its invoice passwords. -->
+        <env name="ENCRYPTION_KEY" value="bGVkZ2VybGlmdC10ZXN0LW9ubHktbGVnYWN5LWtleSE="/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
