@@ -5,7 +5,8 @@ namespace App\Support;
 use DateTime;
 
 /**
- * Port of date_to_mysql() and date_from_mysql() from application/helpers/date_helper.php.
+ * Port of date_to_mysql(), date_from_mysql() and date_format_datepicker() from
+ * application/helpers/date_helper.php.
  */
 final class DateFormat
 {
@@ -40,6 +41,27 @@ final class DateFormat
         $parsed = DateTime::createFromFormat('Y-m-d', $date);
 
         return $parsed ? $parsed->format($this->format()) : '';
+    }
+
+    /**
+     * The bootstrap-datepicker pattern for the display format (date_formats() in date_helper.php).
+     */
+    public function datepicker(): string
+    {
+        return [
+            'd/m/Y' => 'dd/mm/yyyy',
+            'd-m-Y' => 'dd-mm-yyyy',
+            'd-M-Y' => 'dd-M-yyyy',
+            'd.m.Y' => 'dd.mm.yyyy',
+            'j.n.Y' => 'd.m.yyyy',
+            'd M,Y' => 'dd M,yyyy',
+            'm/d/Y' => 'mm/dd/yyyy',
+            'm-d-Y' => 'mm-dd-yyyy',
+            'm.d.Y' => 'mm.dd.yyyy',
+            'Y/m/d' => 'yyyy/mm/dd',
+            'Y-m-d' => 'yyyy-mm-dd',
+            'Y.m.d' => 'yyyy.mm.dd',
+        ][$this->format()] ?? '';
     }
 
     private function format(): string

@@ -55,3 +55,16 @@ it('drives the global helpers from the stored settings', function () {
         ->and(format_quantity('1.5'))->toBe('1.50')
         ->and(date_from_mysql('2026-10-30'))->toBe('30.10.2026');
 });
+
+it('exposes the newest applied migration as current_version, as legacy does', function () {
+    expect(app(Settings::class)->get('current_version'))->toBe('1.7.2');
+});
+
+it('picks current_version by date applied before file name, like the legacy ordering', function () {
+    // The legacy installer applied 019_1.4.7.sql last, so its install reports 1.4.7.
+    DB::table('ip_versions')->insert([
+        'version_date_applied' => (string) (time() + 10), 'version_file' => '019_1.4.7.sql', 'version_sql_errors' => 0,
+    ]);
+
+    expect(app(Settings::class)->get('current_version'))->toBe('1.4.7');
+});

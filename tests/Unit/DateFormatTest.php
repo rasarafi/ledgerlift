@@ -45,3 +45,12 @@ it('returns the raw value while $_POST is non-empty unless told to ignore it', f
         $_POST = [];
     }
 });
+
+it('maps the display format to its bootstrap-datepicker pattern', function () {
+    // date_formats() in date_helper.php
+    expect(dateFormat()->datepicker())->toBe('mm/dd/yyyy')
+        ->and(dateFormat('d-M-Y')->datepicker())->toBe('dd-M-yyyy')
+        ->and(dateFormat('j.n.Y')->datepicker())->toBe('d.m.yyyy')
+        ->and(dateFormat('d M,Y')->datepicker())->toBe('dd M,yyyy')
+        ->and(dateFormat('Y.m.d')->datepicker())->toBe('yyyy.mm.dd');
+});

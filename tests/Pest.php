@@ -1,5 +1,6 @@
 <?php
 
+use Tests\Support\InteractsWithLegacySession;
 use Tests\Support\RestoresBaseline;
 use Tests\TestCase;
 
@@ -15,7 +16,7 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
-    ->use(RestoresBaseline::class)
+    ->use(RestoresBaseline::class, InteractsWithLegacySession::class)
     ->in('Feature');
 
 /*
