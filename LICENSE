@@ -1,0 +1,67 @@
+MIT License
+
+Copyright (c) 2026 rasarafi
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+Third-party material: InvoicePlane
+================================================================================
+Parts of this repository are derived from InvoicePlane v1.7.2
+(https://github.com/InvoicePlane/InvoicePlane) and remain under its licence:
+the built assets in public/assets/, the English strings in lang/en/ip.php, and
+the markup of the Blade views ported from InvoicePlane's views
+(resources/views/).
+
+InvoicePlane's licence file, with its copyright and permission notice, its
+trademark notice and the CodeIgniter licence, is reproduced verbatim in
+public/assets/LICENSE-InvoicePlane.txt. Its copyright and permission notice:
+
+    Copyright (c) 2012-2014 InvoicePlane.com
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to permit
+    persons to whom the Software is furnished to do so, subject to the
+    following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+
+The name 'InvoicePlane' and the InvoicePlane logo belong to InvoicePlane.com /
+Kovah.de. ledgerlift is not affiliated with or endorsed by InvoicePlane; the
+name is used only to identify the application this project migrates.
+
+================================================================================
+Acknowledgment: CodeIgniter
+================================================================================
+InvoicePlane is built on CodeIgniter. ledgerlift is derived from InvoicePlane
+and therefore, in part, from CodeIgniter, Copyright (c) 2008 - 2011,
+EllisLab, Inc. The CodeIgniter licence is included in
+public/assets/LICENSE-InvoicePlane.txt.
