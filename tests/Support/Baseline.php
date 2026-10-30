@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * The known database state every Feature test starts from: a freshly migrated
- * `ledgerlift_test` plus the admin user, kept as a snapshot and copied back before
+ * `ledgerlift_test` plus the admin user, kept as a snapshot and restored before
  * each test (MyISAM cannot roll back).
  */
 final class Baseline
@@ -26,9 +26,9 @@ final class Baseline
             self::$built = true;
         }
 
-        DatabaseSnapshot::copy(self::SNAPSHOT, self::WORKING);
+        DatabaseSnapshot::restore(self::SNAPSHOT, self::WORKING);
 
-        // The copy dropped the database the app's connection had selected.
+        // When restore() falls back to a full copy, it drops the database the app's connection had selected.
         DB::purge();
     }
 
