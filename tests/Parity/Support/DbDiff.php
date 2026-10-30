@@ -2,9 +2,9 @@
 
 namespace Tests\Parity\Support;
 
+use App\Database\Mysql;
 use InvalidArgumentException;
 use RuntimeException;
-use Tests\Support\Mysql;
 
 /**
  * Compares two databases row by row: every `ip_*` table except `ip_sessions` (unused by

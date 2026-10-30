@@ -2,6 +2,7 @@
 
 namespace Tests\Support;
 
+use App\Database\DatabaseSnapshot;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 

@@ -1,8 +1,8 @@
 <?php
 
+use App\Database\DatabaseSnapshot;
+use App\Database\Mysql;
 use Illuminate\Database\Connection;
-use Tests\Support\DatabaseSnapshot;
-use Tests\Support\Mysql;
 use Tests\TestCase;
 
 uses(TestCase::class);

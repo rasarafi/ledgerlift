@@ -2,6 +2,8 @@
 
 namespace Tests\Support;
 
+use App\Database\Mysql;
+
 /**
  * Reads a database's structure from information_schema, in a shape two databases
  * can be compared by: tables, columns in ordinal order, and indexes.
@@ -23,6 +25,12 @@ final class SchemaReader
         // MySQL 8 serves information_schema statistics (AUTO_INCREMENT) from a cache that
         // can be stale right after DDL or inserts; expiry 0 reads the live value.
         $db->statement('SET SESSION information_schema_stats_expiry = 0');
+
+        // After a server restart, InnoDB reports AUTO_INCREMENT as NULL for a table nobody has
+        // opened yet; opening each one first reads its real counter.
+        foreach ($db->select("SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_TYPE = 'BASE TABLE'", [$database]) as $table) {
+            $db->select("SELECT 1 FROM `$database`.`{$table->name}` LIMIT 0");
+        }
 
         $description = ['tables' => [], 'columns' => [], 'indexes' => []];
 

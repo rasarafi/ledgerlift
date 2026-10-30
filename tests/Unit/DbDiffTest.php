@@ -1,7 +1,7 @@
 <?php
 
+use App\Database\Mysql;
 use Tests\Parity\Support\DbDiff;
-use Tests\Support\Mysql;
 use Tests\TestCase;
 
 uses(TestCase::class);

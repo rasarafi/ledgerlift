@@ -10,3 +10,6 @@ RUN composer install --no-dev --no-interaction --no-progress --no-scripts --opti
 COPY --chown=www-data:www-data . .
 RUN composer dump-autoload --no-dev --optimize \
     && php artisan package:discover --ansi
+
+# First-start demo data for both apps (app/Console/Commands/DemoSeed.php).
+COPY --chmod=755 docker/entrypoint.d/ /etc/entrypoint.d/

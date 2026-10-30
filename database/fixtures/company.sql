@@ -1,6 +1,7 @@
--- Parity fixture: a small, made-up company, loaded on top of the pristine legacy install.
--- Every name, address and email here is invented. Ids are fixed; invoice group 5 follows
--- the seeded groups 3 and 4. Settings stay at the install defaults.
+-- The demo company: small and made-up, loaded on top of the pristine legacy install by the
+-- parity suite's baseline and by `ledgerlift:demo-seed` (App\Database\DemoCompany). Every name,
+-- address and email here is invented. Ids are fixed; invoice group 5 follows the seeded
+-- groups 3 and 4. Settings stay at the install defaults.
 
 INSERT INTO ip_tax_rates (tax_rate_id, tax_rate_name, tax_rate_percent) VALUES
     (1, 'VAT', 15.00),

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Support;
+namespace App\Database;
 
 use Illuminate\Database\Connection;
 use InvalidArgumentException;
@@ -9,7 +9,8 @@ use InvalidArgumentException;
  * Copies one `*_test` database over another, table by table.
  *
  * InvoicePlane's tables are MyISAM, so there is no transaction to roll back; tests
- * restore a known state by copying a baseline back instead.
+ * restore a known state by copying a baseline back instead, and `ledgerlift:demo-seed`
+ * copies the pristine legacy install into the new app's database.
  */
 final class DatabaseSnapshot
 {
@@ -81,14 +82,19 @@ final class DatabaseSnapshot
         self::restoreCounters($db, $tables, $to);
     }
 
+    /** Refuses any database whose name does not end in `_test`. */
+    public static function ensureTestDatabase(string $name): void
+    {
+        if (! preg_match('/^[A-Za-z0-9_]+_test$/D', $name)) {
+            throw new InvalidArgumentException("Refusing to write: '$name' is not a database whose name ends in _test.");
+        }
+    }
+
     /** Checks both names, and returns an admin connection with uncached table statistics. */
     private static function connect(string $from, string $to): Connection
     {
-        foreach ([$from, $to] as $name) {
-            if (! preg_match('/^[A-Za-z0-9_]+_test$/D', $name)) {
-                throw new InvalidArgumentException("Refusing to copy: '$name' is not a database whose name ends in _test.");
-            }
-        }
+        self::ensureTestDatabase($from);
+        self::ensureTestDatabase($to);
 
         if ($from === $to) {
             throw new InvalidArgumentException('Refusing to copy a database onto itself.');

@@ -12,6 +12,9 @@ return [
 
     'legacy_url' => env('LEGACY_URL', 'http://localhost:8091'),
 
+    // The legacy app's database (LEGACY_DB), which `ledgerlift:demo-seed` snapshots and seeds.
+    'legacy_database' => env('LEGACY_DB'),
+
     // config.php: ENABLE_INVOICE_DELETION (invoices other than drafts may be deleted) and
     // DISABLE_READ_ONLY (invoices are never read-only), read with env_bool(): only "true" is true.
     'enable_invoice_deletion' => LegacyEnv::bool('ENABLE_INVOICE_DELETION'),

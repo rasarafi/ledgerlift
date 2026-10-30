@@ -2,15 +2,16 @@
 
 namespace Tests\Parity\Support;
 
+use App\Database\DatabaseSnapshot;
+use App\Database\DemoCompany;
+use App\Database\Mysql;
+use App\Database\Pristine;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
-use Tests\Support\DatabaseSnapshot;
-use Tests\Support\Mysql;
-use Tests\Support\Pristine;
 
 /**
  * The two apps' databases (LEGACY_DB and NEW_DB), reset to the same baseline before each
- * scenario: the pristine legacy install plus fixtures/company.sql.
+ * scenario: the pristine legacy install plus the demo company (database/fixtures/company.sql).
  */
 final class ParityDatabases
 {
@@ -28,8 +29,8 @@ final class ParityDatabases
     public static function reset(array $settings = []): void
     {
         if (! self::$built) {
-            DatabaseSnapshot::copy(Pristine::ensure(), self::BASELINE);
-            self::loadFixture(self::BASELINE, dirname(__DIR__).'/fixtures/company.sql');
+            DatabaseSnapshot::copy(Pristine::ensure(self::database('legacy')), self::BASELINE);
+            DemoCompany::load(self::BASELINE);
             self::$built = true;
         }
 
@@ -59,18 +60,5 @@ final class ParityDatabases
     public static function connection(string $side): Connection
     {
         return Mysql::connection(self::database($side));
-    }
-
-    /** Runs a fixture file one statement at a time, so an error in any statement surfaces. */
-    private static function loadFixture(string $database, string $path): void
-    {
-        $db = Mysql::connection($database);
-        $sql = (string) preg_replace('/^--.*$/m', '', (string) file_get_contents($path));
-
-        foreach (preg_split('/;\s*$/m', $sql) ?: [] as $statement) {
-            if (trim($statement) !== '') {
-                $db->statement($statement);
-            }
-        }
     }
 }

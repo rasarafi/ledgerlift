@@ -1,8 +1,8 @@
 <?php
 
+use App\Database\Mysql;
+use App\Database\Pristine;
 use Illuminate\Support\Facades\Artisan;
-use Tests\Support\Mysql;
-use Tests\Support\Pristine;
 use Tests\Support\SchemaReader;
 use Tests\TestCase;
 
@@ -32,7 +32,7 @@ function migrateSchemaDatabase(): void
 }
 
 it('reproduces the legacy schema exactly', function () {
-    $pristine = Pristine::ensure();
+    $pristine = Pristine::ensure((string) env('LEGACY_DB'));
     migrateSchemaDatabase();
 
     $laravel = SchemaReader::describe(SCHEMA_DB);
@@ -76,7 +76,7 @@ function installRows(string $database, string $table, string $orderBy): array
 }
 
 it('seeds exactly the rows a fresh legacy install creates', function (string $table, string $orderBy) {
-    $pristine = Pristine::ensure();
+    $pristine = Pristine::ensure((string) env('LEGACY_DB'));
     migrateSchemaDatabase();
 
     $expected = installRows($pristine, $table, $orderBy);
@@ -91,7 +91,7 @@ it('seeds exactly the rows a fresh legacy install creates', function (string $ta
 ]);
 
 it('leaves every other table empty, as the legacy install does apart from the admin user', function () {
-    $pristine = Pristine::ensure();
+    $pristine = Pristine::ensure((string) env('LEGACY_DB'));
     migrateSchemaDatabase();
 
     $populated = ['ip_settings', 'ip_invoice_groups', 'ip_payment_methods', 'ip_versions'];

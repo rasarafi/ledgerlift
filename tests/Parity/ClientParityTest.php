@@ -1,13 +1,13 @@
 <?php
 
+use App\Database\DatabaseSnapshot;
+use App\Database\Mysql;
 use Illuminate\Database\Connection;
 use Tests\Parity\Support\AppClient;
 use Tests\Parity\Support\DbDiff;
 use Tests\Parity\Support\LegacyModel;
 use Tests\Parity\Support\ParityDatabases;
 use Tests\Parity\Support\TableText;
-use Tests\Support\DatabaseSnapshot;
-use Tests\Support\Mysql;
 
 /*
  * Clients, their AJAX endpoints and the orphan cleanup, driven the same way against legacy and

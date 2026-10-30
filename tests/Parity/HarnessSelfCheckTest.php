@@ -1,11 +1,11 @@
 <?php
 
+use App\Database\DatabaseSnapshot;
+use App\Database\Mysql;
 use PHPUnit\Framework\AssertionFailedError;
 use Tests\Parity\Support\AppClient;
 use Tests\Parity\Support\DbDiff;
 use Tests\Parity\Support\ParityDatabases;
-use Tests\Support\DatabaseSnapshot;
-use Tests\Support\Mysql;
 
 // These tests check the harness itself: that it can fail, that setting variants reach
 // both apps, and that normalise.php hides exactly the run-to-run noise and no more.

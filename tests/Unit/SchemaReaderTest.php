@@ -1,6 +1,6 @@
 <?php
 
-use Tests\Support\Mysql;
+use App\Database\Mysql;
 use Tests\Support\SchemaReader;
 use Tests\TestCase;
 

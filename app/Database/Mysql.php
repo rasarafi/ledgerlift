@@ -1,13 +1,14 @@
 <?php
 
-namespace Tests\Support;
+namespace App\Database;
 
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Connections to the compose MySQL that are independent of the app's default
- * connection, so a test can read or rebuild any `*_test` database by name.
+ * connection, so the demo seed and the tests can read or rebuild any `*_test`
+ * database by name.
  */
 final class Mysql
 {
