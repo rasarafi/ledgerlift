@@ -89,7 +89,7 @@ function calcInvoiceState(int $invoiceId): array
     return (array) DB::table('ip_invoices')->where('invoice_id', $invoiceId)->first(['invoice_status_id', 'is_read_only', 'payment_method']);
 }
 
-/** The brief's invoice: three items, an invoice tax Service 7.50 on items plus item tax, and 10% off. */
+/** The reference invoice: three items, an invoice tax Service 7.50 on items plus item tax, and 10% off. */
 function calcThreeItemInvoice(): array
 {
     calcTaxRates();

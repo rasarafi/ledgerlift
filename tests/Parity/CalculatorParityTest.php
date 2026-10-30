@@ -16,7 +16,7 @@ use Tests\Parity\Support\ParityDatabases;
  * Fixture tax rates: 1 VAT 15.00, 2 Reduced 5.00, 3 Service 7.50; client 1, admin user 1, group 3.
  */
 
-/** The brief's invoice: VAT on A, Reduced and a per-unit discount on B, no tax on C. */
+/** The reference invoice: VAT on A, Reduced and a per-unit discount on B, no tax on C. */
 const CALC_THREE_ITEMS = [
     ['item_id' => 1, 'item_name' => 'Workshop fit-out', 'item_quantity' => '1', 'item_price' => '1200.00', 'item_tax_rate_id' => 1],
     ['item_id' => 2, 'item_name' => 'Hinges', 'item_quantity' => '12', 'item_price' => '19.99', 'item_tax_rate_id' => 2, 'item_discount_amount' => '1.50'],

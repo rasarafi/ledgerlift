@@ -1,11 +1,12 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "rasarafi/ledgerlift",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "InvoicePlane v1.7.2 migrated from CodeIgniter 3 to Laravel 13 on the same database, with a parity suite against the original.",
     "keywords": [
         "laravel",
-        "framework"
+        "invoiceplane",
+        "legacy-migration"
     ],
     "license": "MIT",
     "require": {

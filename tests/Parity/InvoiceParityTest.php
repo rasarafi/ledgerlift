@@ -15,7 +15,7 @@ use Tests\Parity\Support\TableText;
  * 2 month; groups 3 "{{{id}}}" and 5 "INV-{{{year}}}-{{{id}}}"; admin user 1.
  */
 
-it('builds the Task 10b invoice through the UI endpoints: create, items, invoice tax, discount', function () {
+it('builds the reference invoice through the UI endpoints: create, items, invoice tax, discount', function () {
     $result = parity(function (AppClient $app, string $side) {
         $db = ParityDatabases::connection($side);
         $app->login();

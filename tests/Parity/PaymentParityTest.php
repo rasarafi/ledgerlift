@@ -17,7 +17,7 @@ use Tests\Parity\Support\TableText;
  */
 
 /**
- * The Task 10b invoice, sent, as Task 11a's first scenario builds it (total 1713.80, items VAT/Reduced/none,
+ * The reference invoice, built as InvoiceParityTest's first scenario builds it, then sent (total 1713.80, items VAT/Reduced/none,
  * Service 7.50% invoice tax, 10% discount).
  */
 function ppayInvoice(AppClient $app, Connection $db, array $create = []): int

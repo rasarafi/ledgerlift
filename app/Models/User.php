@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 /**
- * ip_users. The password lives in user_password (60-char bcrypt, or the legacy
- * salted format that Task 6 upgrades on login). The table has no remember-token
+ * ip_users. The password lives in user_password as a 60-char bcrypt hash. Users without
+ * user_psalt (pre-1.2.0 MD5 hashes, which legacy upgrades on login) are refused by
+ * SessionController, see Mdl_sessions.php:40. The table has no remember-token
  * column, so the token name is empty and Laravel never reads or writes one.
  */
 class User extends Authenticatable

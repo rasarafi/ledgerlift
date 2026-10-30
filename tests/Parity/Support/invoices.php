@@ -10,7 +10,7 @@ use Tests\Parity\Support\TableText;
  * Required once from tests/Pest.php, so each test file can run alone.
  */
 
-/** The brief's invoice (Task 10b): VAT on A, Reduced and a per-unit discount on B, no tax on C. */
+/** The reference invoice: VAT on A, Reduced and a per-unit discount on B, no tax on C. */
 const IPAR_THREE_ITEMS = [
     ['item_name' => 'Workshop fit-out', 'item_quantity' => '1', 'item_price' => '1200.00', 'item_tax_rate_id' => '1'],
     ['item_name' => 'Hinges', 'item_quantity' => '12', 'item_price' => '19.99', 'item_tax_rate_id' => '2', 'item_discount_amount' => '1.50'],
