@@ -36,11 +36,9 @@ if (! function_exists('get_setting')) {
     /**
      * As the legacy get_setting(): an unset or empty setting gives $default.
      */
-    function get_setting(string $key, mixed $default = '', bool $escape = false): mixed
+    function get_setting(string $key, mixed $default = ''): mixed
     {
-        $value = app(Settings::class)->get($key, $default);
-
-        return $escape && is_string($value) ? e($value) : $value;
+        return app(Settings::class)->get($key, $default);
     }
 }
 

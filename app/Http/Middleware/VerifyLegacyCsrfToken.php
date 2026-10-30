@@ -11,7 +11,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * Laravel's CSRF check, speaking the legacy protocol: the token travels in the `_ip_csrf`
  * field (scripts.js appends it to every jQuery POST) and the current token comes back in
  * an `X-_ip_csrf` header, which scripts.js copies into the csrf_token_value meta tag.
- * The token itself is Laravel's per-session token; it does not rotate.
+ * The token itself is Laravel's per-session token; it does not rotate per request
+ * (it is regenerated on login and logout).
  */
 class VerifyLegacyCsrfToken extends PreventRequestForgery
 {

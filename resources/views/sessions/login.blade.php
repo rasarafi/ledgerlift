@@ -11,7 +11,7 @@
 <html class="no-js" lang="en"> <!--<![endif]-->
 
 <head>
-    <title>{{ get_setting('custom_title', 'InvoicePlane') }} - {!! __('ip.login') !!}</title>
+    <title>{{ get_setting('custom_title', 'ledgerlift') }} - {!! __('ip.login') !!}</title>
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">

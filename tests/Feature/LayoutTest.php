@@ -27,6 +27,21 @@ it('renders the dashboard inside the ported layout', function () {
         ->assertSee("format: 'mm/dd/yyyy'", false);
 });
 
+it('titles pages ledgerlift unless custom_title is set', function () {
+    $this->continueSession()->get('/dashboard')->assertSee('<title>ledgerlift</title>', false);
+
+    DB::table('ip_settings')->insert(['setting_key' => 'custom_title', 'setting_value' => 'Acme Billing']);
+    $this->continueSession()->get('/dashboard')->assertSee('<title>Acme Billing</title>', false);
+});
+
+it('opens quotes on the legacy app with plain links, not cross-origin ajax modals', function () {
+    $this->continueSession()->get('/dashboard')
+        ->assertDontSee('quotes/ajax', false)
+        ->assertDontSee('create-quote', false)
+        ->assertSee('<a href="http://localhost:8091/quotes/index">Create Quote</a>', false)
+        ->assertSee('load("'.url('invoices/ajax/modal_create_invoice').'")', false);
+});
+
 it('never links the trademarked InvoicePlane logo files', function () {
     $this->continueSession()->get('/dashboard')->assertDontSee('logo_200x100', false)->assertDontSee('logo_400x200', false);
 });

@@ -1,5 +1,5 @@
 @use('App\Support\Strangler')
-<title>{{ get_setting('custom_title', 'InvoicePlane') }}</title>
+<title>{{ get_setting('custom_title', 'ledgerlift') }}</title>
 
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -53,15 +53,6 @@
             $('#modal-placeholder').load("{{ Strangler::url('invoices/ajax/modal_create_invoice') }}");
         });
 
-        $(document).on('click', '.create-quote', function () {
-            $('#modal-placeholder').load("{{ Strangler::url('quotes/ajax/modal_create_quote') }}");
-        });
-
-        $(document).on('click', '#btn_quote_to_invoice', function () {
-            var quote_id = $(this).data('quote-id');
-            $('#modal-placeholder').load("{{ Strangler::url('quotes/ajax/modal_quote_to_invoice') }}/" + quote_id);
-        });
-
         $(document).on('click', '#btn_copy_invoice', function () {
             var invoice_id = $(this).data('invoice-id');
             var client_id = $(this).data('client-id');
@@ -76,23 +67,9 @@
             $('#modal-placeholder').load("{{ Strangler::url('invoices/ajax/modal_create_credit') }}", {invoice_id: invoice_id});
         });
 
-        $(document).on('click', '#btn_copy_quote', function () {
-            var quote_id = $(this).data('quote-id');
-            var client_id = $(this).data('client-id');
-            $('#modal-placeholder').load("{{ Strangler::url('quotes/ajax/modal_copy_quote') }}", {
-                quote_id: quote_id,
-                client_id: client_id
-            });
-        });
-
         $(document).on('click', '.client-create-invoice', function () {
             var client_id = $(this).data('client-id');
             $('#modal-placeholder').load("{{ Strangler::url('invoices/ajax/modal_create_invoice') }}", {client_id: client_id});
-        });
-
-        $(document).on('click', '.client-create-quote', function () {
-            var client_id = $(this).data('client-id');
-            $('#modal-placeholder').load("{{ Strangler::url('quotes/ajax/modal_create_quote') }}", {client_id: client_id});
         });
 
         $(document).on('click', '.invoice-add-payment', function () {

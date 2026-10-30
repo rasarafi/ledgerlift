@@ -34,7 +34,7 @@
                         <i class="visible-md-inline fa fa-file"></i>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a href="#" class="create-quote">{!! __('ip.create_quote') !!}</a></li>
+                        <li><a href="{{ Strangler::url('quotes/index') }}">{!! __('ip.create_quote') !!}</a></li>
                         <li><a href="{{ Strangler::url('quotes/index') }}">{!! __('ip.view_quotes') !!}</a></li>
                     </ul>
                 </li>

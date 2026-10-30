@@ -27,6 +27,14 @@ it('shows the login form with a CSRF hidden input', function () {
         ->assertSee('href="http://localhost:8091/sessions/passwordreset"', false);
 });
 
+it('titles the login page ledgerlift, and honours custom_title', function () {
+    $this->get('/sessions/login')->assertSee('<title>ledgerlift - Login</title>', false);
+
+    DB::table('ip_settings')->insert(['setting_key' => 'custom_title', 'setting_value' => 'Acme Billing']);
+    $this->app->forgetScopedInstances();
+    $this->get('/sessions/login')->assertSee('<title>Acme Billing - Login</title>', false);
+});
+
 it('names the session cookie ledgerlift_session', function () {
     $this->get('/sessions/login')->assertCookie('ledgerlift_session');
 });

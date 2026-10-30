@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 trait InteractsWithLegacySession
 {
     /**
-     * Sends the next request with the session cookie of the last one and a cold guard,
+     * Sends the next request with the session cookie of the last one a cold guard and fresh per-request services (Settings),
      * as a browser (and a fresh PHP process) would.
      */
     protected function continueSession(): static
@@ -19,6 +19,7 @@ trait InteractsWithLegacySession
         $id = session()->getId();
 
         Auth::forgetGuards();
+        $this->app->forgetScopedInstances();
 
         return $this->withCookie((string) config('session.cookie'), $id);
     }
