@@ -124,7 +124,9 @@ invoice group, product, client, invoice, invoice tax or payment; outside them it
 users, projects, tasks, custom fields and others. CodeIgniter's global CSRF check verifies the
 token and removes `_ip_csrf` from `$_POST`; `ensure_valid_post_request()` then verifies it a
 second time, finds nothing and refuses with `invalid_request`. This was reproduced against the
-running legacy app.
+running legacy app. Upstream tracks it as
+[InvoicePlane#1694](https://github.com/InvoicePlane/InvoicePlane/issues/1694); a fix is on their
+`develop` branch, not yet in a release.
 
 The AJAX deletes do not make that second check and work: deleting an invoice item
 (`invoices/ajax/delete_item`) or a client note (`clients/ajax/delete_client_note`) answers
