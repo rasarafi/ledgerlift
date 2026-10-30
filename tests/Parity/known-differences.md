@@ -96,6 +96,11 @@ deliberate live in `intentional-differences.php`.
   attributes). An array-valued field is stored as the text "Array" after a PHP warning on legacy, quietly here. The form's script string
   carries the amounts as JSON with `'`, `<`, `>` and `&` escaped (legacy prints them as they are). Editing a payment that does not exist
   shows the form with empty fields, as on legacy (which prints PHP warnings first); saving it changes nothing but still recalculates the posted invoice.
+- **Dashboard, not ported.** The quote overview, recent quotes, projects and tasks panels (and the `projects_enabled` setting that shows two of them)
+  are one line linking to the legacy quote list, in the place of the quote overview. The quick action "Create Quote" is a plain link to
+  legacy `quotes/index` (legacy opens a modal); "Create Invoice" opens the ported create-invoice modal. The recent-invoices panel sits in the
+  right column of its own row, where legacy has it, and the left column (recent quotes there) is empty. An invoice whose status is outside 1-4 is left out of the
+  overview here; legacy answers 500 (`array_merge(): Argument #1 must be of type array, null given`, Mdl_invoice_amounts.php:438).
 
 ## Legacy behaviour kept on purpose (not differences)
 
@@ -106,3 +111,7 @@ These look like bugs, are what v1.7.2 does, and ledgerlift does the same so the 
   paid, straight from draft (`paid >= total`, Mdl_payments.php:145).
 - **Payments can be moved.** The edit form posts `invoice_id`; the posted invoice is the one validated, saved to and recalculated.
 - **Delete keeps `is_read_only`.** A paid invoice whose payment is deleted goes back to sent (2) but stays read-only.
+- **Dashboard period.** An unset or unknown `invoice_overview_period` totals this month but prints no period label (`lang()` of a missing
+  key is empty; a fresh install has no such setting). "Last month" and "last quarter" compare with the year of today, so in January (or the
+  first quarter) they look for December (or Q4) of the current year and find nothing, instead of last year's.
+- **Dashboard clock.** The overview, the overdue panel and the due-date flag use MySQL's `NOW()` on both apps; the parity scenarios date their invoices relative to today.

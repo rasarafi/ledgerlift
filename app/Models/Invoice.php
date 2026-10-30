@@ -64,17 +64,17 @@ class Invoice extends Model
     }
 
     /**
-     * Mdl_invoices::statuses(): label and CSS class by status id.
+     * Mdl_invoices::statuses(): label, CSS class and list link by status id.
      *
-     * @return array<int, array{label: string, class: string}>
+     * @return array<int, array{label: string, class: string, href: string}>
      */
     public static function statuses(): array
     {
         return [
-            1 => ['label' => __('ip.draft'), 'class' => 'draft'],
-            2 => ['label' => __('ip.sent'), 'class' => 'sent'],
-            3 => ['label' => __('ip.viewed'), 'class' => 'viewed'],
-            4 => ['label' => __('ip.paid'), 'class' => 'paid'],
+            1 => ['label' => __('ip.draft'), 'class' => 'draft', 'href' => 'invoices/status/draft'],
+            2 => ['label' => __('ip.sent'), 'class' => 'sent', 'href' => 'invoices/status/sent'],
+            3 => ['label' => __('ip.viewed'), 'class' => 'viewed', 'href' => 'invoices/status/viewed'],
+            4 => ['label' => __('ip.paid'), 'class' => 'paid', 'href' => 'invoices/status/paid'],
         ];
     }
 
