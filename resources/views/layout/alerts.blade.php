@@ -3,6 +3,10 @@
     $alertClass = 'alert'.(isset($withoutMargin) ? ' no-margin' : '');
     $alertTypes = ['success' => ['success', 'info-circle'], 'info' => ['info', 'info-circle'], 'warning' => ['warning', 'exclamation-circle'], 'error' => ['danger', 'warning']];
 @endphp
+{{-- validation_errors('<div class="alert alert-danger">', '</div>'): the form re-rendered with its errors, as CI form_validation words them. --}}
+@foreach ($errors->all() as $error)
+<div class="{{ $alertClass }} alert-danger">{!! $error !!}</div>
+@endforeach
 @foreach ($alertTypes as $type => [$class, $icon])
 @if (session('alert_'.$type))
 <div class="{{ $alertClass }} alert-{{ $class }} alert-dismissible" role="alert">

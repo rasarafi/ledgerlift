@@ -97,6 +97,23 @@ final class AppClient
         return $node === null ? null : trim($node->textContent);
     }
 
+    /**
+     * The text of every node matching `$xpath` on the last response's page, whitespace runs
+     * collapsed to one space (the only difference templating engines are allowed to make).
+     *
+     * @return list<string>
+     */
+    public function texts(string $xpath): array
+    {
+        $texts = [];
+
+        foreach ($this->page?->query($xpath) ?? [] as $node) {
+            $texts[] = trim((string) preg_replace('/\s+/u', ' ', $node->textContent));
+        }
+
+        return $texts;
+    }
+
     private function request(): PendingRequest
     {
         return Http::baseUrl($this->baseUrl)

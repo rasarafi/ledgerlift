@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AjaxOnly;
 use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\FilterLegacyInput;
 use App\Http\Middleware\RejectDeleteOverGet;
 use App\Http\Middleware\VerifyLegacyCsrfToken;
 use Illuminate\Foundation\Application;
@@ -26,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(replace: [PreventRequestForgery::class => VerifyLegacyCsrfToken::class]);
 
         $middleware->alias(['ajax' => AjaxOnly::class]);
-        $middleware->group('admin', [EnsureAdmin::class]);
+        $middleware->group('admin', [EnsureAdmin::class, FilterLegacyInput::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

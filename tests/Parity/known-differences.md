@@ -25,3 +25,18 @@ deliberate live in `intentional-differences.php`.
 - **Asset version suffix** (`?v=`): ledgerlift reports 1.7.2; the legacy installer leaves
   1.4.7 as the newest applied version (`019_1.4.7.sql` is applied last by timestamp).
 - **Create Quote** in the navbar is a plain link to legacy `quotes/index`; legacy opens a modal.
+- **Deleting a record.** Legacy v1.7.2 never deletes through `Admin_Controller::ensure_valid_post_request()`
+  (tax rates, families, units, payment methods, invoice groups, and the same call in clients, payments,
+  tasks and others). CodeIgniter's global CSRF check removes `_ip_csrf` from `$_POST`, then
+  `verify_csrf_token()` looks for it there, finds nothing and refuses: legacy flashes the raw lang key
+  `invalid_request`, redirects (to `<module>/index`, `families` for families) and keeps the row.
+  ledgerlift deletes the record, flashes "Record successfully deleted" (what `Response_Model::delete()`
+  was written to do) and redirects to `<module>`. The parity scenarios record both answers and remove the
+  row from the legacy database by hand so the two end states can still be diffed.
+- **Stale session posts.** A POST to an admin URL with a valid login-page token but no login redirects
+  to the login page on legacy (its CSRF cookie outlives the session); ledgerlift answers 403, its token
+  belonging to the session.
+- **Input echoed unescaped.** `invoice_groups/form` prints `invoice_group_next_id` and
+  `invoice_group_left_pad` into their `value` attributes without escaping; ledgerlift escapes them.
+- **Offsets.** A non-numeric list offset (`tax_rates/index/abc`) is a 404 here; legacy fails with a PHP error.
+- **Families search.** The debug-only `console.log(data)` of the filter script is not ported.
