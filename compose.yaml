@@ -44,7 +44,7 @@ services:
       DB_DATABASE: ledgerlift_legacy_test
       # TEST-ONLY key. It protects nothing: the legacy database holds fixtures.
       # Never reuse it for a real install.
-      ENCRYPTION_KEY: bGVkZ2VybGlmdC10ZXN0LW9ubHktbGVnYWN5LWtleSE=
+      ENCRYPTION_KEY: bGVkZ2VybGlmdC10ZXN0LW9ubHktbGVnYWN5LWtleSE= # gitleaks:allow (test-only key, see the comment above)
       DEFAULT_ADMIN_EMAIL: admin@ledgerlift.test
       DEFAULT_ADMIN_PASSWORD: ledgerlift-demo-1
       DEFAULT_ADMIN_NAME: Ledgerlift Admin
@@ -77,7 +77,7 @@ services:
       # TEST-ONLY key, same caveat as the legacy ENCRYPTION_KEY above.
       APP_KEY: base64:bGVkZ2VybGlmdC10ZXN0LW9ubHktYXBwLWtleS0wMDE=
       # The legacy ENCRYPTION_KEY: invoice PDF passwords are encrypted with it, and both apps read each other's.
-      ENCRYPTION_KEY: bGVkZ2VybGlmdC10ZXN0LW9ubHktbGVnYWN5LWtleSE=
+      ENCRYPTION_KEY: bGVkZ2VybGlmdC10ZXN0LW9ubHktbGVnYWN5LWtleSE= # gitleaks:allow (test-only key, see the comment above)
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: "3306"

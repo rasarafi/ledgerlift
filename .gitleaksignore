@@ -1,0 +1,6 @@
+# The test-only legacy ENCRYPTION_KEY ("ledgerlift-test-only-legacy-key!" in base64) in commits
+# made before its lines carried a gitleaks:allow comment. It protects only fixture data.
+4801378784f1d4dfb07b2cf4965bcb8ac42c67a4:.env.example:generic-api-key:43
+4801378784f1d4dfb07b2cf4965bcb8ac42c67a4:compose.yaml:generic-api-key:72
+4801378784f1d4dfb07b2cf4965bcb8ac42c67a4:tests/Unit/LegacyCryptTest.php:generic-api-key:11
+be923696a8021c5ae4e01cd15c5dafe9a2378c16:compose.yaml:generic-api-key:47

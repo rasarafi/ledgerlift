@@ -8,7 +8,7 @@ use App\Support\LegacyCrypt;
  */
 
 /** The compose stack's TEST-ONLY legacy key; it carries no `base64:` prefix, so legacy uses the text itself. */
-const LEGACY_CRYPT_TEST_KEY = 'bGVkZ2VybGlmdC10ZXN0LW9ubHktbGVnYWN5LWtleSE=';
+const LEGACY_CRYPT_TEST_KEY = 'bGVkZ2VybGlmdC10ZXN0LW9ubHktbGVnYWN5LWtleSE='; // gitleaks:allow (test-only key)
 
 it('decrypts a password that the legacy container encrypted', function () {
     // Cryptor::Encrypt("s3crét pdf", getenv('ENCRYPTION_KEY')) run in the legacy container.
