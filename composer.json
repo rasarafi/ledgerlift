@@ -45,6 +45,13 @@
             "@php artisan config:clear --ansi",
             "./vendor/bin/pest"
         ],
+        "parity": [
+            "Composer\\Config::disableProcessTimeout",
+            "LEGACY_URL=${LEGACY_URL:-http://localhost:8091} NEW_URL=${NEW_URL:-http://localhost:8092} LEGACY_DB=${LEGACY_DB:-ledgerlift_legacy_test} NEW_DB=${NEW_DB:-ledgerlift_new_test} ./vendor/bin/pest --testsuite=Parity"
+        ],
+        "schema": [
+            "LEGACY_DB=${LEGACY_DB:-ledgerlift_legacy_test} ./vendor/bin/pest --testsuite=Schema"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
