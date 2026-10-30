@@ -1,6 +1,5 @@
-.git
-.superpowers
-.env
+# Root dotfiles and dot-directories: git, CI, editor and local tool state, .env.
+.*
 vendor
 node_modules
 storage/logs/*
