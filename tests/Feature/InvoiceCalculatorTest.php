@@ -276,3 +276,14 @@ it('leaves the status alone when the invoice has lost its client', function () {
     expect(calcInvoiceAmounts($id))->toMatchArray(['invoice_balance' => '0.00'])
         ->and(calcInvoiceState($id))->toBe(['invoice_status_id' => 2, 'is_read_only' => null, 'payment_method' => 0]);
 });
+
+it('rounds the discount percent as legacy PHP 8.2 does, not as PHP 8.4 would', function () {
+    $id = calcInvoice(['invoice_discount_percent' => '43.87']);
+    calcItem($id, '1', '2150.00');
+
+    calcRun($id);
+
+    // 2150 / 100 × 43.87 = 943.20499999999993: PHP 8.2 pre-rounds it to 943.205 and rounds to 943.21
+    // (PHP 8.4's plain round() gives 943.20, so a total of 1206.80).
+    expect(calcInvoiceAmounts($id))->toMatchArray(['invoice_total' => '1206.79', 'invoice_balance' => '1206.79']);
+});

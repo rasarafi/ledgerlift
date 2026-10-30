@@ -296,3 +296,23 @@ it('takes two payments to a zero balance, then paid and read-only, as legacy doe
             'invoice_total' => '1713.80', 'invoice_paid' => '1713.80', 'invoice_balance' => '0.00', 'invoice_status_id' => 4, 'is_read_only' => 1, 'payment_method' => 3,
         ]);
 });
+
+it('rounds a discount percent where PHP 8.2 and 8.4 differ as legacy does', function () {
+    $result = parity(function (AppClient $app, string $side) {
+        $db = ParityDatabases::connection($side);
+        calcParityInvoice($db, 1, [['item_id' => 1, 'item_name' => 'Survey', 'item_quantity' => '1', 'item_price' => '2150.00', 'item_tax_rate_id' => 0]]);
+
+        if ($side === 'legacy') {
+            $app->login();
+            calcLegacySave($app, $db, 1, discountPercent: '43.87');
+        } else {
+            calcNewSave(1, discountPercent: '43.87');
+        }
+
+        return calcStoredAmounts($db)['invoices'];
+    });
+
+    // 2150 / 100 × 43.87 = 943.20499999999993 → 943.21 on PHP 8.2 (943.20 with PHP 8.4's round()); 2150 − 943.21.
+    expect($result)->toHaveNoDifferences()->toMatchAcrossApps()
+        ->and($result->legacy[1])->toMatchArray(['invoice_total' => '1206.79', 'invoice_balance' => '1206.79']);
+});

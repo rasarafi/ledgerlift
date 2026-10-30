@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\LegacyMath;
 use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 
@@ -95,7 +96,7 @@ final class InvoiceCalculator
     /**
      * calculate_discount() (:142-154): the total and the invoice's stored discounts are each cut to
      * tax_rate_decimal_places (read once, :26), the amount comes off, then the rounded percent of
-     * what is left.
+     * what is left. With PHP 8.2's rounding (LegacyMath), as legacy runs it.
      */
     private function calculateDiscount(int $invoiceId, float $invoiceTotal): float
     {
@@ -103,13 +104,13 @@ final class InvoiceCalculator
         $invoice = DB::table('ip_invoices')->where('invoice_id', $invoiceId)
             ->first(['invoice_discount_amount', 'invoice_discount_percent']);
 
-        $total = (float) number_format($invoiceTotal, $places, '.', '');
-        $discountAmount = (float) number_format((float) $invoice?->invoice_discount_amount, $places, '.', '');
-        $discountPercent = (float) number_format((float) $invoice?->invoice_discount_percent, $places, '.', '');
+        $total = (float) LegacyMath::numberFormat($invoiceTotal, $places, '.', '');
+        $discountAmount = (float) LegacyMath::numberFormat((float) $invoice?->invoice_discount_amount, $places, '.', '');
+        $discountPercent = (float) LegacyMath::numberFormat((float) $invoice?->invoice_discount_percent, $places, '.', '');
 
         $total -= $discountAmount;
 
-        return $total - round($total / 100 * $discountPercent, $places);
+        return $total - LegacyMath::round($total / 100 * $discountPercent, $places);
     }
 
     /** calculate_invoice_taxes() (:179-249), legacy branch. */

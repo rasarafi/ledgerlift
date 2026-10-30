@@ -71,7 +71,7 @@ final class NumberFormat
         $decimals = $decimalPoint !== '' ? (int) $this->setting($decimalsSetting) : 0;
         $value = (float) (is_numeric($amount) ? $amount : $this->standardize($amount));
 
-        return number_format($value, $decimals, $decimalPoint, $this->setting('thousands_separator'));
+        return LegacyMath::numberFormat($value, $decimals, $decimalPoint, $this->setting('thousands_separator'));
     }
 
     private function setting(string $key): string
