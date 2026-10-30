@@ -1,8 +1,10 @@
 <?php
 
 /*
- * Columns DbDiff leaves out because they differ between two identical runs of the same
- * scenario against the same app: time-dependent or random values, never behaviour.
+ * Columns whose values differ between two identical runs of the same scenario against the
+ * same app: time-dependent or random values, never behaviour. DbDiff does not compare their
+ * values, only that both sides agree on NULL and, for date columns, on holding a real date
+ * (a zero date shows up as itself); every other value reads as DbDiff::NORMALISED.
  * Add a column only once two identical legacy runs show it differing (the "two identical
  * legacy runs" self-check in HarnessSelfCheckTest does this for the login scenarios).
  *

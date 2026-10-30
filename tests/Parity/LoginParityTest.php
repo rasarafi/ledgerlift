@@ -3,12 +3,12 @@
 use Tests\Parity\Support\AppClient;
 use Tests\Parity\Support\ParityDatabases;
 
-const ADMIN_EMAIL = 'admin@ledgerlift.test';
+const LOGIN_PARITY_EMAIL = 'admin@ledgerlift.test';
 
 it('logs in with valid credentials and lands on the dashboard', function () {
     $result = parity(function (AppClient $app) {
         $app->get('sessions/login');
-        $login = $app->post('sessions/login', ['email' => ADMIN_EMAIL, 'password' => 'ledgerlift-demo-1', 'btn_login' => 'true']);
+        $login = $app->post('sessions/login', ['email' => LOGIN_PARITY_EMAIL, 'password' => 'ledgerlift-demo-1', 'btn_login' => 'true']);
         $location = $app->location();
         $dashboard = $app->get('dashboard');
 
@@ -29,7 +29,7 @@ it('rejects a wrong password three times and counts the failures in ip_login_log
 
         $redirects = [];
         foreach (range(1, 3) as $attempt) {
-            $response = $app->post('sessions/login', ['email' => ADMIN_EMAIL, 'password' => "wrong-$attempt", 'btn_login' => 'true']);
+            $response = $app->post('sessions/login', ['email' => LOGIN_PARITY_EMAIL, 'password' => "wrong-$attempt", 'btn_login' => 'true']);
             $redirects[] = [$response->status(), $app->location()];
         }
 
@@ -47,7 +47,7 @@ it('rejects a wrong password three times and counts the failures in ip_login_log
         ->and($result->legacy['alert'])->toBe('Email or Password incorrect.')
         // One row for the account and one for the client ip (login_ip:<sha256>), 3 failures each.
         ->and($result->legacy['login_log'])->toHaveCount(2)
-        ->and($result->legacy['login_log'][ADMIN_EMAIL])->toBe(3)
+        ->and($result->legacy['login_log'][LOGIN_PARITY_EMAIL])->toBe(3)
         ->and(array_keys($result->legacy['login_log'])[1])->toMatch('/^login_ip:[0-9a-f]{64}$/')
         ->and(array_values($result->legacy['login_log']))->toBe([3, 3]);
     expect($result)->toMatchAcrossApps()->toHaveNoDifferences();

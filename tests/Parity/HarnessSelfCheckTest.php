@@ -72,9 +72,14 @@ it('self-check: two identical legacy runs differ only in normalised columns', fu
     ParityDatabases::reset();
     $failTwice();
 
-    $raw = DbDiff::compare($copy, $legacyDb, skip: []);
-    expect(array_unique(array_map(fn (array $d) => $d['table'].'.'.$d['column'], $raw)))->toBe(['ip_login_log.log_create_timestamp'])
-        ->and($raw)->toHaveCount(2);
+    // Every raw difference is in a normalise.php column. Whether the timestamps differ at all
+    // depends on the clock (WSL can step it), so their count is only bounded, not required.
+    $raw = DbDiff::compare($copy, $legacyDb, normalise: []);
+    $normalised = array_keys(require __DIR__.'/normalise.php');
+    foreach ($raw as $difference) {
+        expect($normalised)->toContain($difference['table'].'.'.$difference['column']);
+    }
+    expect(count($raw))->toBeLessThanOrEqual(2);
     expect(DbDiff::compare($copy, $legacyDb))->toBe([]);
 
     Mysql::connection()->statement("DROP DATABASE `$copy`");

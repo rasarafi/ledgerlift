@@ -33,10 +33,14 @@ it('narrows an entry further with its match callback', function () use ($diff) {
 });
 
 it('ships entries that each name one column, a reason and a scenario', function () {
-    expect(IntentionalDifferences::entries())->toBeList();
+    // One real column: digits are fine, DbDiff's (row) and (table) markers are not.
+    $oneColumn = '/^ip_[a-z0-9_]+\.[a-z0-9_]+$/';
+    expect('ip_clients.client_address_1')->toMatch($oneColumn)
+        ->and('ip_clients.(row)')->not->toMatch($oneColumn)
+        ->and(IntentionalDifferences::entries())->toBeList();
 
     foreach (IntentionalDifferences::entries() as $entry) {
-        expect($entry['column'])->toMatch('/^ip_[a-z_]+\.[a-z_]+$/')
+        expect($entry['column'])->toMatch($oneColumn)
             ->and($entry['reason'])->not->toBeEmpty()
             ->and($entry)->toHaveKey('scenario');
     }
