@@ -4,7 +4,7 @@ use App\Support\LegacyMath;
 
 /*
  * Legacy runs PHP 8.2, whose round() and number_format() pre-round to 15 significant digits;
- * PHP 8.4 does not. The values below are from a 200,000-value fuzz of v = total / 100 * pct in
+ * PHP 8.4 does not. The values below are from a 200,000-value sweep of v = total / 100 * pct in
  * the legacy container, where they are among the ~0.05% that 8.2 and 8.4 round differently.
  */
 
@@ -34,6 +34,11 @@ it('rounds and formats ordinary values as round() and number_format() do', funct
         ->and(LegacyMath::numberFormat(1234.5, 2, ',', '.'))->toBe('1.234,50')
         ->and(LegacyMath::numberFormat(12.0, 0))->toBe('12')
         ->and(LegacyMath::numberFormat(1713.8000000000002, 2, '.', ''))->toBe('1713.80');
+});
+
+it('formats with negative decimals as PHP 8.2 does: clamped to 0', function () {
+    expect(LegacyMath::numberFormat(1234.5, -2))->toBe('1,235')
+        ->and(LegacyMath::numberFormat(-1234.5, -1))->toBe('-1,235');
 });
 
 it('exists because plain round() on this PHP gives another cent than legacy', function () {

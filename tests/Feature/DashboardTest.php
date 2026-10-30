@@ -95,6 +95,24 @@ describe('dashboard', function () {
         'unknown falls back to this month' => ['sometime', 'Invoice Overview', '$1.00'],
     ]);
 
+    it('takes "last month" and "last quarter" from MySQL\'s clock and compares them with its current year, as legacy does', function (string $now, string $period, string $sent) {
+        // Mdl_invoice_amounts.php:379-406: MONTH/QUARTER(NOW() - INTERVAL 1 ...) but YEAR(NOW()), so in
+        // January (or the first quarter) the period is December (or Q4) of the current year, not last year's.
+        DB::statement('SET TIMESTAMP = '.strtotime("$now 12:00:00 UTC"));
+        foreach (['2025-11-10' => '1.00', '2025-12-10' => '2.00', '2026-02-10' => '4.00', '2026-03-10' => '8.00', '2026-04-10' => '16.00', '2026-11-10' => '32.00', '2026-12-10' => '64.00'] as $created => $balance) {
+            dashInvoice(2, $created, '2027-01-31', '0.00', $balance);
+        }
+        dashSetting('invoice_overview_period', $period);
+
+        expect(dashOverview($this->continueSession()->get('/dashboard')->assertOk()->getContent())['Sent'])->toBe($sent);
+    })->with([
+        'April, last month: March' => ['2026-04-15', 'last-month', '$8.00'],
+        'April, last quarter: Q1' => ['2026-04-15', 'last-quarter', '$12.00'],
+        'January, last month: December of this year' => ['2026-01-15', 'last-month', '$64.00'],
+        'January, last quarter: Q4 of this year' => ['2026-01-15', 'last-quarter', '$96.00'],
+        'February, last quarter: Q4 of this year' => ['2026-02-15', 'last-quarter', '$96.00'],
+    ]);
+
     it('lists the overdue invoices as one panel with their balance, and none otherwise', function () {
         $html = $this->continueSession()->get('/dashboard')->assertOk()->assertSee('No overdue Invoice')->getContent();
         expect($html)->not->toContain('panel-danger');
