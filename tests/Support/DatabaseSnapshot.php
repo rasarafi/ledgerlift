@@ -19,7 +19,7 @@ final class DatabaseSnapshot
     public static function copy(string $from, string $to): void
     {
         foreach ([$from, $to] as $name) {
-            if (! preg_match('/^[A-Za-z0-9_]+_test$/', $name)) {
+            if (! preg_match('/^[A-Za-z0-9_]+_test$/D', $name)) {
                 throw new InvalidArgumentException("Refusing to copy: '$name' is not a database whose name ends in _test.");
             }
         }
@@ -52,9 +52,19 @@ final class DatabaseSnapshot
         foreach ($tables as $table) {
             $db->statement("CREATE TABLE `$to`.`{$table->name}` LIKE `$from`.`{$table->name}`");
             $db->statement("INSERT INTO `$to`.`{$table->name}` SELECT * FROM `$from`.`{$table->name}`");
+        }
 
-            // CREATE TABLE ... LIKE does not carry the counter, and it may be ahead of MAX(id).
-            if ($table->next !== null) {
+        // CREATE TABLE ... LIKE does not carry the counter, and it may be ahead of MAX(id).
+        // INSERT ... SELECT already leaves most tables right; an ALTER rebuilds the table, so
+        // only the ones that differ get one.
+        $copied = $db->select(
+            "SELECT TABLE_NAME AS name, AUTO_INCREMENT AS next FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_TYPE = 'BASE TABLE'",
+            [$to],
+        );
+        $copiedNext = array_column($copied, 'next', 'name');
+
+        foreach ($tables as $table) {
+            if ($table->next !== null && (int) $copiedNext[$table->name] !== (int) $table->next) {
                 $db->statement("ALTER TABLE `$to`.`{$table->name}` AUTO_INCREMENT = ".(int) $table->next);
             }
         }

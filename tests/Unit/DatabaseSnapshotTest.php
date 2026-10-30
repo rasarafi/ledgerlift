@@ -27,6 +27,11 @@ it('refuses a database whose name does not end in _test', function () {
     expect(fn () => DatabaseSnapshot::copy(SNAPSHOT_SOURCE, 'ledgerlift'))->toThrow(InvalidArgumentException::class);
 });
 
+it('refuses a name with a trailing newline after _test', function () {
+    expect(fn () => DatabaseSnapshot::copy(SNAPSHOT_SOURCE, "ledgerlift_test\n"))->toThrow(InvalidArgumentException::class);
+    expect(fn () => DatabaseSnapshot::copy("ledgerlift_test\n", SNAPSHOT_TARGET))->toThrow(InvalidArgumentException::class);
+});
+
 it('reproduces rows, the AUTO_INCREMENT counter and the database charset', function () {
     $admin = Mysql::connection();
     $admin->statement('CREATE TABLE `'.SNAPSHOT_SOURCE.'`.ip_invoice_groups (
