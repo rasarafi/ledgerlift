@@ -5,6 +5,8 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FamilyController;
 use App\Http\Controllers\FilterAjaxController;
+use App\Http\Controllers\InvoiceAjaxController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoiceGroupController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductAjaxController;
@@ -46,6 +48,14 @@ Route::middleware('admin')->group(function () {
     Route::match(['get', 'post'], 'clients/form/{id?}', [ClientController::class, 'form']);
     Route::get('clients/view/{id}/{tab?}/{page?}', [ClientController::class, 'view'])->where('page', '[0-9]+');
     Route::post('clients/delete/{id}', [ClientController::class, 'delete']);
+
+    // Invoices: the list by status, the view, and the deletes (a draft, unless ENABLE_INVOICE_DELETION).
+    Route::get('invoices', [InvoiceController::class, 'index']);
+    Route::get('invoices/index', [InvoiceController::class, 'index']);
+    Route::get('invoices/status/{status?}/{offset?}', [InvoiceController::class, 'status'])->where('offset', '[0-9]+');
+    Route::get('invoices/view/{id}', [InvoiceController::class, 'view']);
+    Route::post('invoices/delete/{id}', [InvoiceController::class, 'delete']);
+    Route::post('invoices/delete_invoice_tax/{invoiceId}/{invoiceTaxRateId}', [InvoiceController::class, 'deleteInvoiceTax']);
 });
 
 // Base_Controller: an AJAX controller answers nothing to a plain request, before the login check.
@@ -53,6 +63,7 @@ Route::middleware(['ajax', 'admin'])->group(function () {
     Route::post('/filter/ajax/filter_families', [FilterAjaxController::class, 'filterFamilies']);
     Route::post('/filter/ajax/filter_products', [FilterAjaxController::class, 'filterProducts']);
     Route::post('/filter/ajax/filter_clients', [FilterAjaxController::class, 'filterClients']);
+    Route::post('/filter/ajax/filter_invoices', [FilterAjaxController::class, 'filterInvoices']);
 
     Route::get('/products/ajax/modal_product_lookups/{rand?}', [ProductAjaxController::class, 'modalProductLookups']);
     Route::post('/products/ajax/process_product_selections', [ProductAjaxController::class, 'processProductSelections']);
@@ -62,4 +73,11 @@ Route::middleware(['ajax', 'admin'])->group(function () {
     Route::post('/clients/ajax/save_client_note', [ClientAjaxController::class, 'saveClientNote']);
     Route::post('/clients/ajax/delete_client_note', [ClientAjaxController::class, 'deleteClientNote']);
     Route::post('/clients/ajax/load_client_notes', [ClientAjaxController::class, 'loadClientNotes']);
+
+    // jQuery's load() is a GET without data, a POST with it (the client's "create invoice" button).
+    Route::match(['get', 'post'], '/invoices/ajax/modal_create_invoice', [InvoiceAjaxController::class, 'modalCreateInvoice']);
+    Route::post('/invoices/ajax/create', [InvoiceAjaxController::class, 'create']);
+    Route::post('/invoices/ajax/save', [InvoiceAjaxController::class, 'save']);
+    Route::post('/invoices/ajax/save_invoice_tax_rate', [InvoiceAjaxController::class, 'saveInvoiceTaxRate']);
+    Route::post('/invoices/ajax/delete_item/{invoiceId}', [InvoiceAjaxController::class, 'deleteItem']);
 });

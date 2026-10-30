@@ -1,5 +1,5 @@
 @use('App\Support\Strangler')
-{{-- Read-only list of invoices ($invoices, $invoiceStatuses): the client view's tab; the invoice list reuses it. --}}
+{{-- partial_invoice_table.php: the invoices ($invoices, $invoiceStatuses) of the invoice list, its filter and the client view's tab. --}}
 @php
     $invoiceCount = count($invoices);
     $invoiceListSplit = $invoiceCount > 3 ? $invoiceCount / 2 : 9999;
@@ -84,7 +84,8 @@
                                 </li>
                             @endif
                             <li>
-                                <a href="{{ Strangler::url('invoices/generate_pdf/'.$invoice->invoice_id) }}?_ip_csrf={{ rawurlencode(csrf_token()) }}"
+                                {{-- PDFs are not ported: the legacy app generates them. --}}
+                                <a href="{{ Strangler::legacy('invoices/generate_pdf/'.$invoice->invoice_id) }}?_ip_csrf={{ rawurlencode(csrf_token()) }}"
                                    target="_blank">
                                     <i class="fa fa-print fa-margin"></i> {!! __('ip.download_pdf') !!}
                                 </a>

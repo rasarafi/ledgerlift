@@ -95,6 +95,21 @@ if (! function_exists('format_client')) {
     }
 }
 
+if (! function_exists('format_user')) {
+    /** user_helper.php: format_user(), "<Name> - <company> - <invoicing contact>" of a user row; '' without a name. */
+    function format_user(?object $user): string
+    {
+        if (empty($user->user_name)) {
+            return '';
+        }
+
+        $company = empty($user->user_company) ? '' : ' - '.$user->user_company;
+        $contact = empty($user->user_invoicing_contact) ? '' : ' - '.$user->user_invoicing_contact;
+
+        return ucfirst($user->user_name).$company.$contact;
+    }
+}
+
 if (! function_exists('format_gender')) {
     /** client_helper.php: format_gender(). */
     function format_gender(mixed $gender): string

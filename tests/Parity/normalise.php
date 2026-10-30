@@ -16,4 +16,5 @@ return [
     'ip_clients.client_date_created' => 'Wall-clock time of the save: date(\'Y-m-d H:i:s\') in MY_Model::save() (MY_Model.php, `$datetime`).',
     'ip_clients.client_date_modified' => 'Same date(\'Y-m-d H:i:s\') of MY_Model::save(), written on create and on every update.',
     'ip_invoices.invoice_date_modified' => 'Same date(\'Y-m-d H:i:s\') of MY_Model::save(), Mdl_invoices::$date_modified_field (Mdl_invoices.php:25), on every invoice save.',
+    'ip_invoices.invoice_url_key' => 'Random: Mdl_invoices::get_url_key() is generate_secure_token(16), 32 hex characters of random_bytes() (Mdl_invoices.php:506-512).',
 ];

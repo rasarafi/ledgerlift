@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Family;
+use App\Models\Invoice;
 use App\Models\Product;
 use App\Support\LegacyLike;
 use Illuminate\Http\Request;
@@ -61,5 +62,22 @@ class FilterAjaxController extends Controller
         }
 
         return view('products.partial_products_table', ['rows' => $products->get()]);
+    }
+
+    /** Ajax::filter_invoices(): every keyword (lower-cased) has to appear in the number, dates, client or amounts. */
+    public function filterInvoices(Request $request): View
+    {
+        $invoices = Invoice::query()->listing();
+
+        foreach (explode(' ', (string) $request->post('filter_query')) as $keyword) {
+            if ($keyword) {
+                $invoices->whereRaw(
+                    "CONCAT_WS('^',LOWER(invoice_number),invoice_date_created,invoice_date_due,LOWER(client_title),LOWER(client_name),LOWER(client_surname),invoice_total,invoice_balance) LIKE ? ESCAPE '!'",
+                    ['%'.LegacyLike::escape(mb_strtolower($keyword)).'%'],
+                );
+            }
+        }
+
+        return view('invoices.partial_invoice_table', ['invoices' => $invoices->get(), 'invoiceStatuses' => Invoice::statuses()]);
     }
 }

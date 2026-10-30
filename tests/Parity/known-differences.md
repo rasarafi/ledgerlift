@@ -36,6 +36,12 @@ deliberate live in `intentional-differences.php`.
   model-level delete, `Mdl_clients::delete()` (a DELETE by primary key) followed by `delete_orphans()`
   (`orphan_helper.php:24-41`), applied to the legacy database by SQL; `ip_user_clients` is not part of it, so a
   deleted client's assignments stay on both sides.
+  Invoices and invoice taxes go the same way: legacy refuses `invoices/delete/{id}` (redirect `invoices/index`) and
+  `invoices/delete_invoice_tax/{invoice}/{tax}` (redirect `invoices/view/{invoice}`) with `invalid_request`. Ledgerlift deletes a
+  draft (any invoice with `ENABLE_INVOICE_DELETION=true`) with its orphans, flashes "Record successfully deleted", and refuses
+  any other with "Deleting invoices is forbidden...", as `Invoices::delete()` was written to; it deletes an invoice tax and
+  recalculates. The scenarios apply `Mdl_invoices::delete()` + `delete_orphans()`, and `Mdl_invoice_tax_rates::delete()` followed
+  by legacy's own recalculation (an unchanged Save), to the legacy database (tests/Parity/Support/LegacyModel.php).
 - **Stale session posts.** A POST to an admin URL with a valid login-page token but no login redirects
   to the login page on legacy (its CSRF cookie outlives the session); ledgerlift answers 403, its token
   belonging to the session.
@@ -55,3 +61,16 @@ deliberate live in `intentional-differences.php`.
 - **Clients, crafted input.** `name_query` with an array `query` answers `[]` (legacy searches for the text
   "Array" after a PHP warning). A non-numeric list offset or tab page is a 404 here; legacy fails with a PHP error.
   A client country that is not in the country list is printed escaped (`partial_client_address.php` echoes it raw).
+- **Invoices, PDFs.** "Download PDF" (the list's option and the view's button) opens `invoices/generate_pdf/{id}` on the legacy
+  app, where the ledgerlift session does not exist: legacy asks for its own login first.
+- **Invoices, not ported.** The invoice view has no custom fields, no e-invoicing (`einvoicing` stays unset), no sumex view
+  (a sumex invoice shows the standard view, and `invoices/ajax/save` does not store its sumex fields; `invoices/ajax/create`
+  still adds the sumex row for a sumex group), no responsive item list (`show_responsive_itemlist` is ignored) and no
+  attachments: the attachments panel is there without its "Add files" button and dropzone script, since uploads are not ported.
+  The copy, credit, recurring, change-client and change-user modals of its menus are not ported (their entries load nothing),
+  and "Add task" loads the legacy task lookup, which a browser refuses cross-origin. "Enter payment" comes with payments.
+- **Invoices, crafted requests.** `invoices/ajax/create`, `save`, `save_invoice_tax_rate` and `delete_item` take POST only (legacy
+  answers a GET as a post without fields: `{"success":0,"validation_errors":[]}` for create and save). A non-AJAX GET of
+  `invoices/ajax/delete_item/{id}` is a 404 here (legacy's AJAX check answers an empty page first). A create without
+  `user_id` (the modal always posts it) takes the logged-in user; legacy fails on the NOT NULL column. A non-numeric list
+  offset is a 404 here; legacy fails with a PHP error.

@@ -14,7 +14,7 @@ trait InteractsWithLegacySession
      * Sends the next request with the session cookie of the last one a cold guard and fresh per-request services (Settings),
      * as a browser (and a fresh PHP process) would.
      */
-    protected function continueSession(): static
+    public function continueSession(): static
     {
         $id = session()->getId();
 

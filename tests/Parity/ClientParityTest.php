@@ -3,6 +3,7 @@
 use Illuminate\Database\Connection;
 use Tests\Parity\Support\AppClient;
 use Tests\Parity\Support\DbDiff;
+use Tests\Parity\Support\LegacyModel;
 use Tests\Parity\Support\ParityDatabases;
 use Tests\Parity\Support\TableText;
 use Tests\Support\DatabaseSnapshot;
@@ -207,27 +208,6 @@ function seedClientActivity(Connection $db): void
     $db->table('ip_quote_item_amounts')->insert(['item_id' => 51]);
     $db->table('ip_quote_tax_rates')->insert(['quote_id' => 50, 'tax_rate_id' => 1]);
     $db->table('ip_user_clients')->insert([['user_id' => 1, 'client_id' => 1], ['user_id' => 1, 'client_id' => 2]]);
-}
-
-/**
- * Legacy's model-level client delete, as SQL: Mdl_clients::delete() is MY_Model::delete() (a
- * DELETE by primary key) followed by delete_orphans() (orphan_helper.php:24-41). Written out here
- * on purpose, apart from App\Services\OrphanCleaner, which this scenario checks.
- */
-function legacyModelDeleteClient(Connection $db, int $clientId): void
-{
-    $db->statement('DELETE FROM ip_clients WHERE ip_clients.client_id = ?', [$clientId]);
-
-    foreach ([
-        'ip_invoices' => ['client_id', 'ip_clients'], 'ip_quotes' => ['client_id', 'ip_clients'], 'ip_invoice_amounts' => ['invoice_id', 'ip_invoices'],
-        'ip_quote_amounts' => ['quote_id', 'ip_quotes'], 'ip_payments' => ['invoice_id', 'ip_invoices'], 'ip_client_custom' => ['client_id', 'ip_clients'],
-        'ip_invoice_custom' => ['invoice_id', 'ip_invoices'], 'ip_user_custom' => ['user_id', 'ip_users'], 'ip_payment_custom' => ['payment_id', 'ip_payments'],
-        'ip_quote_custom' => ['quote_id', 'ip_quotes'], 'ip_invoice_items' => ['invoice_id', 'ip_invoices'], 'ip_invoice_item_amounts' => ['item_id', 'ip_invoice_items'],
-        'ip_quote_items' => ['quote_id', 'ip_quotes'], 'ip_quote_item_amounts' => ['item_id', 'ip_quote_items'], 'ip_client_notes' => ['client_id', 'ip_clients'],
-        'ip_quote_tax_rates' => ['quote_id', 'ip_quotes'], 'ip_invoice_tax_rates' => ['invoice_id', 'ip_invoices'], 'ip_invoices_recurring' => ['invoice_id', 'ip_invoices'],
-    ] as $table => [$column, $parent]) {
-        $db->statement("DELETE FROM $table WHERE $column NOT IN (SELECT $column FROM $parent)");
-    }
 }
 
 it('creates, edits and deactivates a client, showing the same forms, lists and views', function () {
@@ -461,7 +441,7 @@ it('deletes a client and its orphans: ledgerlift for real, legacy by its model-l
         $deleted[$side] = [$delete->status(), $app->location(), clientPage($app)['flash']];
 
         if ($side === 'legacy') {
-            legacyModelDeleteClient($db, 1);
+            LegacyModel::deleteClient($db, 1);
         }
 
         $steps['after'] = clientPage($app, 'clients/status/all');
@@ -472,12 +452,12 @@ it('deletes a client and its orphans: ledgerlift for real, legacy by its model-l
         // A client with no activity, and one that does not exist.
         $app->post('clients/delete/3');
         if ($side === 'legacy') {
-            legacyModelDeleteClient($db, 3);
+            LegacyModel::deleteClient($db, 3);
         }
         $missing = $app->post('clients/delete/9999');
         $deleted[$side.' missing'] = [$missing->status(), $app->location()];
         if ($side === 'legacy') {
-            legacyModelDeleteClient($db, 9999);
+            LegacyModel::deleteClient($db, 9999);
         }
 
         $steps['counts'] = array_map(fn (string $table) => $db->table($table)->count(), ['ip_clients', 'ip_invoices', 'ip_invoice_amounts', 'ip_invoice_items', 'ip_invoice_item_amounts', 'ip_payments', 'ip_payment_custom', 'ip_client_notes', 'ip_client_custom', 'ip_quotes', 'ip_quote_items', 'ip_user_clients']);

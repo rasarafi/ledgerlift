@@ -81,16 +81,7 @@ class ClientAjaxController extends Controller
             return LegacyJson::make(['success' => 1, 'new_token' => csrf_token()]);
         }
 
-        // json_errors(): the errors of the posted fields, in the order they were posted, in CI's <p> delimiters.
-        $errors = [];
-
-        foreach (array_keys($request->post()) as $field) {
-            if ($validator->errors()->has($field)) {
-                $errors[$field] = '<p>'.$validator->errors()->first($field).'</p>';
-            }
-        }
-
-        return LegacyJson::make(['success' => 0, 'new_token' => csrf_token(), 'validation_errors' => $errors]);
+        return LegacyJson::make(['success' => 0, 'new_token' => csrf_token(), 'validation_errors' => $noteRequest->jsonErrors($validator)]);
     }
 
     /** Ajax::delete_client_note(): an unknown note is "not deleted", an empty id counts as deleted. */
