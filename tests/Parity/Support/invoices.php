@@ -122,7 +122,7 @@ function iparView(AppClient $app, int $invoiceId): array
 function iparList(AppClient $app, string $path = 'invoices/status/all'): array
 {
     $response = $app->get($path);
-    $relative = fn (string $href) => (string) preg_replace('/_ip_csrf=[^&"\']*/', '_ip_csrf=TOKEN', str_replace([rtrim((string) env('LEGACY_URL'), '/').'/', rtrim($app->baseUrl, '/').'/'], '', $href));
+    $relative = fn (string $href) => parityHref($app, $href);
 
     return [
         'status' => $response->status(),

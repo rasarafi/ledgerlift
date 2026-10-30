@@ -85,7 +85,7 @@
                             @endif
                             <li>
                                 {{-- PDFs are not ported: the legacy app generates them. --}}
-                                <a href="{{ Strangler::legacy('invoices/generate_pdf/'.$invoice->invoice_id) }}?_ip_csrf={{ rawurlencode(csrf_token()) }}"
+                                <a href="{{ Strangler::legacy('invoices/generate_pdf/'.$invoice->invoice_id) }}"
                                    target="_blank">
                                     <i class="fa fa-print fa-margin"></i> {!! __('ip.download_pdf') !!}
                                 </a>

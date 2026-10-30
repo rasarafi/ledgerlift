@@ -37,17 +37,6 @@ const CLIENT_INPUTS = [
     'client_phone', 'client_fax', 'client_mobile', 'client_email', 'client_web', 'client_vat_id', 'client_tax_code', 'client_birthdate', 'client_title_custom',
 ];
 
-/**
- * A path or URL on the app, relative to it, with the CSRF token of a link dropped. A link to a
- * module ledgerlift does not serve (the mailer) points at the legacy app; both hosts are dropped.
- */
-function clientRelative(AppClient $app, string $href): string
-{
-    $hosts = [rtrim((string) env('LEGACY_URL'), '/').'/', rtrim($app->baseUrl, '/').'/'];
-
-    return (string) preg_replace('/_ip_csrf=[^&"\']*/', '_ip_csrf=TOKEN', str_replace($hosts, '', $href));
-}
-
 /** What the client list shows that a user reads: heading, flash, errors, table, links, pager, status buttons. */
 function clientPage(AppClient $app, string $path = 'clients/status/active'): array
 {
@@ -61,9 +50,10 @@ function clientPage(AppClient $app, string $path = 'clients/status/active'): arr
         'errors' => $app->texts('//div[@id="content"]//div[@class="alert alert-danger"]'),
         'search box' => $app->texts('//input[@id="filter"]/@placeholder'),
         'rows' => $response->body() === '' ? [] : TableText::rows($response->body()),
-        'links' => array_map(fn (string $href) => clientRelative($app, $href), $app->texts('//table//a/@href')),
-        'client ids' => $app->texts('//table//a/@data-client-id'),
-        'pager' => array_map(fn (string $href) => clientRelative($app, $href), $app->texts('//div[contains(@class, "model-pager")]//a/@href')),
+        'links' => array_map(fn (string $href) => parityHref($app, $href), $app->texts('//table//a/@href')),
+        // Create Quote carries no client id here: it is a plain link (parityHref(), known-differences "Clients, links").
+        'client ids' => $app->texts('//table//a[contains(@class, "client-create-invoice")]/@data-client-id'),
+        'pager' => array_map(fn (string $href) => parityHref($app, $href), $app->texts('//div[contains(@class, "model-pager")]//a/@href')),
         'pager disabled' => $app->texts('//div[contains(@class, "model-pager")]//a[contains(@class, "disabled")]/@title'),
         'status buttons' => $app->texts('//div[contains(@class, "index-options")]//a/@class'),
     ];
@@ -122,7 +112,7 @@ function clientView(AppClient $app, string $path): array
     }
 
     $body = $response->body();
-    $links = fn (string $tab) => array_map(fn (string $href) => clientRelative($app, $href), $app->texts("//div[@id='client-$tab']//a/@href"));
+    $links = fn (string $tab) => array_map(fn (string $href) => parityHref($app, $href), $app->texts("//div[@id='client-$tab']//a/@href"));
 
     return [
         'status' => $response->status(),
@@ -133,12 +123,12 @@ function clientView(AppClient $app, string $path): array
             'invoices' => [$app->text('//ul[@id="submenu"]/li[a/@href="#client-invoices"]/@class'), $app->text('//div[@id="client-invoices"]/@class')],
             'payments' => [$app->text('//ul[@id="submenu"]/li[a/@href="#client-payments"]/@class'), $app->text('//div[@id="client-payments"]/@class')],
         ],
-        'buttons' => array_map(fn (string $href) => clientRelative($app, $href), $app->texts('//div[@id="headerbar"]//a/@href | //div[@id="headerbar"]//form/@action')),
-        'create buttons' => $app->texts('//div[@id="headerbar"]//a/@data-client-id'),
+        'buttons' => array_map(fn (string $href) => parityHref($app, $href), $app->texts('//div[@id="headerbar"]//a/@href | //div[@id="headerbar"]//form/@action')),
+        'create buttons' => $app->texts('//div[@id="headerbar"]//a[contains(@class, "client-create-invoice")]/@data-client-id'),
         // Everything the details tab prints (the e-mail script included), whitespace collapsed.
         'details' => $app->texts('//div[@id="client-details"]'),
         'address' => $app->texts('//div[@id="client-details"]//p'),
-        'detail links' => array_map(fn (string $href) => clientRelative($app, $href), $app->texts('//div[@id="client-details"]//a/@href')),
+        'detail links' => array_map(fn (string $href) => parityHref($app, $href), $app->texts('//div[@id="client-details"]//a/@href')),
         'notes' => $app->texts('//div[@id="notes_list"]'),
         'note ids' => $app->texts('//span[contains(@class, "delete_client_note")]/@data-id'),
         'invoices' => TableText::rows($body, '//div[@id="client-invoices"]//table'),
@@ -147,10 +137,10 @@ function clientView(AppClient $app, string $path): array
         'invoice icons' => $app->texts('//div[@id="client-invoices"]//span[contains(@class, "label")]//i/@title'),
         'invoice dropups' => $app->texts('//div[@id="client-invoices"]//div[contains(@class, "options")]/@class'),
         'invoice data' => $app->texts('//div[@id="client-invoices"]//a[@data-invoice-id]/@data-invoice-balance'),
-        'invoice pager' => array_map(fn (string $href) => clientRelative($app, $href), $app->texts('//div[@id="client-invoices"]//div[contains(@class, "model-pager")]//a/@href')),
+        'invoice pager' => array_map(fn (string $href) => parityHref($app, $href), $app->texts('//div[@id="client-invoices"]//div[contains(@class, "model-pager")]//a/@href')),
         'payments' => TableText::rows($body, '//div[@id="client-payments"]//table'),
         'payment links' => $links('payments'),
-        'payment pager' => array_map(fn (string $href) => clientRelative($app, $href), $app->texts('//div[@id="client-payments"]//div[contains(@class, "model-pager")]//a/@href')),
+        'payment pager' => array_map(fn (string $href) => parityHref($app, $href), $app->texts('//div[@id="client-payments"]//div[contains(@class, "model-pager")]//a/@href')),
     ];
 }
 

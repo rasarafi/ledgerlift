@@ -1,3 +1,4 @@
+@use('App\Support\Strangler')
 {{-- einvoicing is not ported: the e-invoicing columns of legacy's table never show. --}}
 <div class="table-responsive">
     <table class="table table-hover table-striped">
@@ -38,8 +39,8 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="#" class="client-create-quote"
-                                   data-client-id="{{ $client->client_id }}">
+                                {{-- Quotes are not ported: the client opens in the legacy app, which creates them. --}}
+                                <a href="{{ Strangler::legacy('clients/view/'.$client->client_id) }}">
                                     <i class="fa fa-file fa-margin"></i> {!! __('ip.create_quote') !!}
                                 </a>
                             </li>

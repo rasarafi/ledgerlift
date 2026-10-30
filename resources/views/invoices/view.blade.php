@@ -100,7 +100,7 @@
         });
 
         $('#btn_generate_pdf').click(function () {
-            window.open('{{ Strangler::legacy('invoices/generate_pdf/'.$invoiceId) }}?_ip_csrf={{ rawurlencode(csrf_token()) }}', '_blank');
+            window.open('{{ Strangler::legacy('invoices/generate_pdf/'.$invoiceId) }}', '_blank');
         });
 
         $(document).on('click', '.btn_delete_item', function () {

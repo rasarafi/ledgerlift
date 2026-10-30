@@ -31,6 +31,28 @@ function parity(Closure $scenario, array $settings = []): ParityResult
     return new ParityResult($legacy, $new, $diff);
 }
 
+/**
+ * A link as either app writes it, relative to the app: both hosts dropped (a link to a module ledgerlift
+ * does not serve points at the legacy app) and a link's CSRF token masked. Two links differ on purpose
+ * (tests/Parity/known-differences.md) and are compared as legacy writes them:
+ * - "Invoices, PDFs": legacy's generate_pdf links carry its own token (`?_ip_csrf=`), ledgerlift's none;
+ * - "Clients, links": a client's Create Quote is `href="#"` with a modal on legacy, and on ledgerlift a link
+ *   to that client on the legacy app (the only link ledgerlift writes to a legacy `clients/view/{id}`).
+ */
+function parityHref(AppClient $app, string $href): string
+{
+    $legacy = rtrim((string) env('LEGACY_URL'), '/').'/';
+    $own = rtrim($app->baseUrl, '/').'/';
+
+    if ($own !== $legacy && preg_match('#^'.preg_quote($legacy, '#').'clients/view/\d+$#D', $href)) {
+        return '#';
+    }
+
+    $relative = (string) preg_replace('#^(invoices/generate_pdf/\d+)\?_ip_csrf=[^&"\']*$#D', '$1', str_replace([$legacy, $own], '', $href));
+
+    return (string) preg_replace('/_ip_csrf=[^&"\']*/', '_ip_csrf=TOKEN', $relative);
+}
+
 expect()->extend('toHaveNoDifferences', function () {
     /** @var ParityResult $result */
     $result = $this->value;

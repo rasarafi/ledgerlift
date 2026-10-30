@@ -16,12 +16,6 @@ use Tests\Parity\Support\TableText;
  * clients 1-8; admin user 1.
  */
 
-/** The same path on either app, as the apps' own links write it. */
-function ppayRelative(AppClient $app, string $href): string
-{
-    return (string) preg_replace('/_ip_csrf=[^&"\']*/', '_ip_csrf=TOKEN', str_replace([rtrim((string) env('LEGACY_URL'), '/').'/', rtrim($app->baseUrl, '/').'/'], '', $href));
-}
-
 /**
  * The Task 10b invoice, sent, as Task 11a's first scenario builds it (total 1713.80, items VAT/Reduced/none,
  * Service 7.50% invoice tax, 10% discount).
@@ -76,7 +70,7 @@ function ppayModal(AppClient $app, Connection $db, int $invoiceId): array
         'labels' => $app->texts('//div[@id="enter-payment"]//label'),
         'buttons' => $app->texts('//div[@class="modal-footer"]//button'),
         'cf exist' => $app->text('//input[@id="payment_cf_exist"]/@value'),
-        'redirect' => ppayRelative($app, json_decode($redirect[1] ?? '""', true)),
+        'redirect' => parityHref($app, json_decode($redirect[1] ?? '""', true)),
     ];
 }
 
@@ -91,7 +85,7 @@ function ppayList(AppClient $app, string $path = 'payments/index'): array
         'title' => $app->texts('//h1[@class="headerbar-title"]'),
         'flash' => $app->texts('//div[contains(@class, "alert-dismissible")]/span'),
         'rows' => TableText::rows($response->body(), '//div[@id="filter_results"]//table'),
-        'links' => array_map(fn (string $href) => ppayRelative($app, $href), $app->texts('//div[@id="content"]//a/@href | //div[@id="filter_results"]//form/@action | //div[@id="headerbar"]//a/@href')),
+        'links' => array_map(fn (string $href) => parityHref($app, $href), $app->texts('//div[@id="content"]//a/@href | //div[@id="filter_results"]//form/@action | //div[@id="headerbar"]//a/@href')),
         'search box' => $app->texts('//input[@id="filter"]/@placeholder'),
     ];
 }

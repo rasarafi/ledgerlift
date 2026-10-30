@@ -383,8 +383,19 @@ describe('screens', function () {
             ->assertSee('Ashgrove Joinery')
             ->assertSee(url('invoices/ajax/save'), false)
             ->assertSee('action="'.url("invoices/delete/$id").'"', false)
-            ->assertSee(rtrim((string) config('ledgerlift.legacy_url'), '/')."/invoices/generate_pdf/$id", false);
+            ->assertSee(rtrim((string) config('ledgerlift.legacy_url'), '/')."/invoices/generate_pdf/$id'", false);
         $this->continueSession()->get('/invoices/view/9999')->assertNotFound();
+    });
+
+    it('sends no token of its own to the legacy PDF link, from the view, the list and the dashboard', function () {
+        $id = invCreate($this, $this->clientId)['invoice_id'];
+        $pdf = rtrim((string) config('ledgerlift.legacy_url'), '/')."/invoices/generate_pdf/$id";
+
+        foreach (["/invoices/view/$id", '/invoices/status/all', '/dashboard'] as $page) {
+            $html = $this->continueSession()->get($page)->assertOk()->getContent();
+
+            expect($html)->toContain($pdf)->not->toContain("$pdf?")->not->toContain('_ip_csrf=');
+        }
     });
 
     it('answers a 404 to a crafted id that MySQL would coerce, here and in another module', function () {

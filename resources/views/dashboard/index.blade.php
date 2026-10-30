@@ -148,7 +148,7 @@
                                         <i class="fa fa-file-pdf-o"></i>
                                     </a>
 @else
-                                    <a href="{{ Strangler::legacy('invoices/generate_pdf/'.$invoice->invoice_id) }}?_ip_csrf={{ rawurlencode(csrf_token()) }}"
+                                    <a href="{{ Strangler::legacy('invoices/generate_pdf/'.$invoice->invoice_id) }}"
                                        target="_blank" title="{!! __('ip.download_pdf') !!}">
                                         <i class="fa fa-file-pdf-o"></i>
                                     </a>

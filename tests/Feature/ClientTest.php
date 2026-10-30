@@ -307,6 +307,28 @@ describe('view', function () {
             ->assertSee('<tbody>', false);
     });
 
+    it('links Create Quote to the client in the legacy app, on the view and in the list', function () {
+        $id = client();
+        $legacyClient = 'href="'.rtrim((string) config('ledgerlift.legacy_url'), '/')."/clients/view/$id".'"';
+
+        foreach (["/clients/view/$id", '/clients/status/active'] as $page) {
+            $this->continueSession()->get($page)->assertOk()
+                ->assertDontSee('client-create-quote', false)
+                ->assertSeeInOrder([$legacyClient, 'Create Quote'], false)
+                ->assertSee('client-create-invoice', false);
+        }
+    });
+
+    it('prints a listed country by name and escapes a code that is not in the list', function () {
+        $listed = client(['client_country' => 'GB']);
+        $unlisted = client(['client_country' => '<b>ZZ</b>']);
+
+        $this->continueSession()->get("/clients/view/$listed")->assertSee('<br>United Kingdom', false);
+        $this->continueSession()->get("/clients/view/$unlisted")->assertOk()
+            ->assertDontSee('<b>ZZ</b>', false)
+            ->assertSee('<br>&lt;b&gt;ZZ&lt;/b&gt;', false);
+    });
+
     it('links the quotes tab to the legacy app', function () {
         $id = client();
 

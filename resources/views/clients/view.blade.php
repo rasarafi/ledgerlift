@@ -1,5 +1,7 @@
 @extends('layout.app')
 
+@use('App\Support\Strangler')
+
 @section('content')
 <script>
     $(function () {
@@ -62,8 +64,8 @@
 
     <div class="headerbar-item pull-right">
         <div class="btn-group btn-group-sm">
-            <a href="#" class="btn btn-default client-create-quote"
-               data-client-id="{{ $client->client_id }}">
+            {{-- Quotes are not ported: the client opens in the legacy app, which creates them. --}}
+            <a href="{{ Strangler::legacy('clients/view/'.$client->client_id) }}" class="btn btn-default">
                 <i class="fa fa-file"></i> {!! __('ip.create_quote') !!}
             </a>
             <a href="#" class="btn btn-default client-create-invoice"
@@ -89,7 +91,7 @@
 <ul id="submenu" class="nav nav-tabs nav-tabs-noborder">
     <li{!! $activeTab == 'detail' ? ' class="active"' : '' !!}><a data-toggle="tab" href="#client-details">{!! __('ip.details') !!}</a></li>
     {{-- Quotes are not ported: the tab is a link to the client's quotes on the legacy app. --}}
-    <li><a href="{{ \App\Support\Strangler::legacy('clients/view/'.$client->client_id.'/quotes') }}">{!! __('ip.quotes') !!}</a></li>
+    <li><a href="{{ Strangler::legacy('clients/view/'.$client->client_id.'/quotes') }}">{!! __('ip.quotes') !!}</a></li>
     <li{!! $activeTab == 'invoices' ? ' class="active"' : '' !!}><a data-toggle="tab" href="#client-invoices">{!! __('ip.invoices') !!}</a></li>
     <li{!! $activeTab == 'payments' ? ' class="active"' : '' !!}><a data-toggle="tab" href="#client-payments">{!! __('ip.payments') !!}</a></li>
 </ul>

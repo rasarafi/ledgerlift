@@ -13,12 +13,6 @@ use Tests\Parity\Support\TableText;
  * 2 Credit Card; the client "Acme Rivets" is created by the scenario (id 9).
  */
 
-/** The same path on either app, as the apps' own links write it. */
-function dparRelative(AppClient $app, string $href): string
-{
-    return (string) preg_replace('/_ip_csrf=[^&"\']*/', '_ip_csrf=TOKEN', str_replace([rtrim((string) env('LEGACY_URL'), '/').'/', rtrim($app->baseUrl, '/').'/'], '', $href));
-}
-
 /** A date as the m/d/Y screens take it, `$days` from today. */
 function dparDate(int $days = 0): string
 {
@@ -92,7 +86,7 @@ function dparSet(Connection $db, string $key, string $value): void
 function dparPage(AppClient $app): array
 {
     $response = $app->get('dashboard');
-    $relative = fn (string $href) => dparRelative($app, $href);
+    $relative = fn (string $href) => parityHref($app, $href);
     $rows = fn (string $xpath) => TableText::rows($response->body(), $xpath);
 
     return [
@@ -141,7 +135,7 @@ function dparFilters(AppClient $app): array
                 'status' => $response->status(),
                 'type' => strtolower($response->header('Content-Type')),
                 'rows' => TableText::rows($response->body()),
-                'links' => array_map(fn (string $href) => dparRelative($app, $href), dparHrefs($response->body())),
+                'links' => array_map(fn (string $href) => parityHref($app, $href), dparHrefs($response->body())),
             ];
         }
     }
