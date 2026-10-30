@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Validator;
  */
 abstract class LegacyFormRequest extends FormRequest
 {
-    /** @return array<string, string|list<ValidationRule>> */
+    /** @return array<string, string|list<ValidationRule|string>> */
     abstract public function rules(): array;
 
     public function validateResolved(): void {}

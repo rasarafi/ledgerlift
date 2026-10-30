@@ -42,6 +42,12 @@ deliberate live in `intentional-differences.php`.
   any other with "Deleting invoices is forbidden...", as `Invoices::delete()` was written to; it deletes an invoice tax and
   recalculates. The scenarios apply `Mdl_invoices::delete()` + `delete_orphans()`, and `Mdl_invoice_tax_rates::delete()` followed
   by legacy's own recalculation (an unchanged Save), to the legacy database (tests/Parity/Support/LegacyModel.php).
+  Payments too: legacy refuses `payments/delete/{id}` (redirect `payments`) with `invalid_request`. Ledgerlift deletes the payment, recalculates the
+  invoice, moves a paid invoice (4) back to sent (2) leaving `is_read_only` as it is, sweeps the orphans (`ip_payment_custom` rows of the payment
+  go), and flashes "Record successfully deleted", as `Mdl_payments::delete()` (Mdl_payments.php:417-447) was written to. The scenario labels the
+  legacy side "model-level": it deletes the row by SQL, lets legacy recalculate through the `invoices/ajax/delete_item` of a zero-price
+  placeholder item, applies the 4 → 2 rule by SQL (Mdl_payments.php:439-443) and runs `delete_orphans()`. A payment id that does not exist is a
+  no-op here (legacy would fail reading it).
 - **Stale session posts.** A POST to an admin URL with a valid login-page token but no login redirects
   to the login page on legacy (its CSRF cookie outlives the session); ledgerlift answers 403, its token
   belonging to the session.
@@ -68,8 +74,7 @@ deliberate live in `intentional-differences.php`.
   still adds the sumex row for a sumex group), no responsive item list (`show_responsive_itemlist` is ignored) and no
   attachments: the attachments panel is there without its "Add files" button and dropzone script, since uploads are not ported.
   The copy-invoice, create-credit, create-recurring, change-client, change-user and "Add task" actions open the invoice
-  in the legacy app (plain links to `invoices/view/{id}` there); legacy opens their modals in place. "Enter payment" comes with
-  payments.
+  in the legacy app (plain links to `invoices/view/{id}` there); legacy opens their modals in place.
 - **Invoices, crafted requests.** `invoices/ajax/create`, `save`, `save_invoice_tax_rate` and `delete_item` take POST only (legacy
   answers a GET as a post without fields: `{"success":0,"validation_errors":[]}` for create and save). A non-AJAX GET of
   `invoices/ajax/delete_item/{id}` is a 404 here (legacy's AJAX check answers an empty page first). A create without
@@ -83,3 +88,21 @@ deliberate live in `intentional-differences.php`.
   here (Laravel treats it as empty); CI's `is_unique` runs on it. A JSON object (not a list) in `items` is ignored here; legacy
   iterates its properties. As on legacy, the keys of each item in `items` are written as the item's columns: the one write path
   that does not persist only the fields of the validation rules.
+- **Payments, not ported.** The online payment logs (`payments/online_logs`; the navbar link goes to legacy) and payment custom fields (the
+  form and the modal show none, and the modal's `payment_cf_exist` flag is only passed on, so a payment saved from it with custom fields
+  defined lands on the payment form, as on legacy).
+- **Payments, crafted requests.** `payments/ajax/add` takes POST only (legacy answers a GET as a post without fields); `modal_add_payment`
+  takes either, as legacy does. The modal prints the posted `invoice_id` and `payment_cf_exist` escaped (legacy echoes them raw into
+  attributes). An array-valued field is stored as the text "Array" after a PHP warning on legacy, quietly here. The form's script string
+  carries the amounts as JSON with `'`, `<`, `>` and `&` escaped (legacy prints them as they are). Editing a payment that does not exist
+  shows the form with empty fields, as on legacy (which prints PHP warnings first); saving it changes nothing but still recalculates the posted invoice.
+
+## Legacy behaviour kept on purpose (not differences)
+
+These look like bugs, are what v1.7.2 does, and ledgerlift does the same so the parity suite can prove it:
+
+- **Payments of zero or less.** `validate_payment_amount()` only rejects an amount above the balance; there is no `amount > 0` check, so a
+  zero or negative payment is accepted (a negative one raises the balance). A zero payment on an invoice whose total is zero also marks it
+  paid, straight from draft (`paid >= total`, Mdl_payments.php:391).
+- **Payments can be moved.** The edit form posts `invoice_id`; the posted invoice is the one validated, saved to and recalculated.
+- **Delete keeps `is_read_only`.** A paid invoice whose payment is deleted goes back to sent (2) but stays read-only.

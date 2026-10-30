@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Family;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Support\LegacyLike;
 use Illuminate\Http\Request;
@@ -79,5 +80,22 @@ class FilterAjaxController extends Controller
         }
 
         return view('invoices.partial_invoice_table', ['invoices' => $invoices->get(), 'invoiceStatuses' => Invoice::statuses()]);
+    }
+
+    /** Ajax::filter_payments(): every keyword (lower-cased) has to appear in the date, invoice number, client, amount, method or note. */
+    public function filterPayments(Request $request): View
+    {
+        $payments = Payment::query()->listing();
+
+        foreach (explode(' ', (string) $request->post('filter_query')) as $keyword) {
+            if ($keyword) {
+                $payments->whereRaw(
+                    "CONCAT_WS('^',payment_date,LOWER(invoice_number),LOWER(client_title),LOWER(client_name),LOWER(client_surname),payment_amount,LOWER(payment_method_name),LOWER(payment_note)) LIKE ? ESCAPE '!'",
+                    ['%'.LegacyLike::escape(mb_strtolower($keyword)).'%'],
+                );
+            }
+        }
+
+        return view('payments.partial_payment_table', ['payments' => $payments->get()]);
     }
 }

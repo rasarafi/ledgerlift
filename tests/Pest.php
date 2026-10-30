@@ -31,6 +31,7 @@ pest()->extend(TestCase::class)
     ->in('Parity');
 
 require_once __DIR__.'/Parity/Support/parity.php';
+require_once __DIR__.'/Parity/Support/invoices.php';
 
 /*
 |--------------------------------------------------------------------------

@@ -8,6 +8,8 @@ use App\Http\Controllers\FilterAjaxController;
 use App\Http\Controllers\InvoiceAjaxController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoiceGroupController;
+use App\Http\Controllers\PaymentAjaxController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductAjaxController;
 use App\Http\Controllers\ProductController;
@@ -58,6 +60,12 @@ Route::middleware('admin')->group(function () {
     Route::get('invoices/view/{id}', [InvoiceController::class, 'view'])->whereNumber('id');
     Route::post('invoices/delete/{id}', [InvoiceController::class, 'delete'])->whereNumber('id');
     Route::post('invoices/delete_invoice_tax/{invoiceId}/{invoiceTaxRateId}', [InvoiceController::class, 'deleteInvoiceTax'])->whereNumber(['invoiceId', 'invoiceTaxRateId']);
+
+    // Payments: the list, the form, and the delete (the add and modal endpoints are AJAX, below).
+    Route::get('payments', [PaymentController::class, 'index']);
+    Route::get('payments/index/{offset?}', [PaymentController::class, 'index'])->whereNumber('offset');
+    Route::match(['get', 'post'], 'payments/form/{id?}', [PaymentController::class, 'form'])->whereNumber('id');
+    Route::post('payments/delete/{id}', [PaymentController::class, 'delete'])->whereNumber('id');
 });
 
 // Base_Controller: an AJAX controller answers nothing to a plain request, before the login check.
@@ -66,6 +74,7 @@ Route::middleware(['ajax', 'admin'])->group(function () {
     Route::post('/filter/ajax/filter_products', [FilterAjaxController::class, 'filterProducts']);
     Route::post('/filter/ajax/filter_clients', [FilterAjaxController::class, 'filterClients']);
     Route::post('/filter/ajax/filter_invoices', [FilterAjaxController::class, 'filterInvoices']);
+    Route::post('/filter/ajax/filter_payments', [FilterAjaxController::class, 'filterPayments']);
 
     Route::get('/products/ajax/modal_product_lookups/{rand?}', [ProductAjaxController::class, 'modalProductLookups'])->whereNumber('rand');
     Route::post('/products/ajax/process_product_selections', [ProductAjaxController::class, 'processProductSelections']);
@@ -82,4 +91,8 @@ Route::middleware(['ajax', 'admin'])->group(function () {
     Route::post('/invoices/ajax/save', [InvoiceAjaxController::class, 'save']);
     Route::post('/invoices/ajax/save_invoice_tax_rate', [InvoiceAjaxController::class, 'saveInvoiceTaxRate']);
     Route::post('/invoices/ajax/delete_item/{invoiceId}', [InvoiceAjaxController::class, 'deleteItem'])->whereNumber('invoiceId');
+
+    // Like the create-invoice modal, the add-payment modal is a GET without data and a POST with it.
+    Route::match(['get', 'post'], '/payments/ajax/modal_add_payment', [PaymentAjaxController::class, 'modalAddPayment']);
+    Route::post('/payments/ajax/add', [PaymentAjaxController::class, 'add']);
 });

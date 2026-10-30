@@ -41,7 +41,7 @@ class Payment extends Model
             ->select(
                 'ip_payments.*', 'ip_payment_methods.payment_method_name',
                 'ip_clients.client_id', 'ip_clients.client_title', 'ip_clients.client_name', 'ip_clients.client_surname',
-                'ip_invoices.invoice_number', 'ip_invoices.invoice_date_created',
+                'ip_invoices.invoice_number', 'ip_invoices.invoice_date_created', 'ip_invoice_amounts.invoice_balance',
             )
             ->orderByRaw('ip_payments.payment_date DESC, ip_payments.payment_id DESC');
     }

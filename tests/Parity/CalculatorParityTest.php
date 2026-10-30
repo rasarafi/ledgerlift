@@ -9,8 +9,8 @@ use Tests\Parity\Support\ParityDatabases;
 /*
  * InvoiceCalculator against legacy's own recalculation. Each scenario inserts the same invoice
  * rows into both databases. Legacy then recalculates through its endpoints (invoices/ajax/save,
- * payments/ajax/add, invoices/ajax/delete_item). Ledgerlift has no such endpoints yet, so
- * its side runs the same sequence in process against NEW_DB: InvoiceCalculator for the maths, and
+ * payments/ajax/add, invoices/ajax/delete_item). Ledgerlift's side of this file predates its endpoints (the
+ * invoice and payment parity suites drive those), and runs the same sequence in process against NEW_DB: InvoiceCalculator for the maths, and
  * plain SQL for the rows those endpoints write around it. Both databases are then diffed whole, and
  * the stored amounts checked against the values worked by hand.
  * Fixture tax rates: 1 VAT 15.00, 2 Reduced 5.00, 3 Service 7.50; client 1, admin user 1, group 3.

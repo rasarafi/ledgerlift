@@ -1,5 +1,4 @@
-@use('App\Support\Strangler')
-{{-- Read-only list of payments ($payments): the client view's tab; the payment list reuses it. --}}
+{{-- partial_payments_table.php: the rows of $payments, for the payment list, its filter and the client view's tab. --}}
 <div class="table-responsive">
     <table class="table table-hover table-striped">
 
@@ -21,7 +20,7 @@
             <tr>
                 <td>{{ date_from_mysql($payment->payment_date) }}</td>
                 <td>{{ date_from_mysql($payment->invoice_date_created) }}</td>
-                <td><a href="{{ Strangler::url('invoices/view/'.$payment->invoice_id) }}">{{ $payment->invoice_number }}</a></td>
+                <td><a href="{{ url('invoices/view/'.$payment->invoice_id) }}">{{ $payment->invoice_number }}</a></td>
                 <td>
                     <a href="{{ url('clients/view/'.$payment->client_id) }}"
                        title="{!! __('ip.view_client') !!}">
@@ -38,7 +37,7 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li>
-                                <a href="{{ Strangler::url('payments/form/'.$payment->payment_id) }}">
+                                <a href="{{ url('payments/form/'.$payment->payment_id) }}">
                                     <i class="fa fa-edit fa-margin"></i>
                                     {!! __('ip.edit') !!}
                                 </a>
