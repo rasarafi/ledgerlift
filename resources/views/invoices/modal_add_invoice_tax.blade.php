@@ -9,14 +9,14 @@
             if ('0' == tax_rate_id) return;
             show_loader(); // Show spinner
             $.post("{{ url('invoices/ajax/save_invoice_tax_rate') }}", {
-                    invoice_id: {{ $invoiceId }},
+                    invoice_id: @json($invoiceId),
                     tax_rate_id: tax_rate_id,
                     include_item_tax: $('#include_item_tax').val()
                 },
                 function (data) {
                     var response = json_parse(data, {{ (int) config('app.debug') }});
                     if (response.success === 1) {
-                        window.location = "{{ url('invoices/view') }}/" + {{ $invoiceId }};
+                        window.location = "{{ url('invoices/view') }}/" + @json($invoiceId);
                     }
                     // close_loader(); No error returned (show go to wiki if not success after 10s)  Todo: else // The validation was not successful
                 });

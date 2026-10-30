@@ -387,6 +387,33 @@ describe('screens', function () {
         $this->continueSession()->get('/invoices/view/9999')->assertNotFound();
     });
 
+    it('answers a 404 to a crafted id that MySQL would coerce, here and in another module', function () {
+        $id = invCreate($this, $this->clientId)['invoice_id'];
+
+        $this->continueSession()->get("/invoices/view/$id-alert(1)")->assertNotFound();
+        $this->continueSession()->post("/invoices/delete/$id-alert(1)")->assertNotFound();
+        $this->continueSession()->post("/invoices/ajax/delete_item/$id-alert(1)", ['item_id' => '1'], INV_AJAX)->assertNotFound();
+        $this->continueSession()->get('/invoices/status/all/1-alert(1)')->assertNotFound();
+        $this->continueSession()->get('/tax_rates/form/1-alert(1)')->assertNotFound();
+        $this->continueSession()->get('/clients/view/1-alert(1)')->assertNotFound();
+    });
+
+    it('puts the record\'s integer id into the scripts, and links the unported actions to the legacy app', function () {
+        $id = invCreate($this, $this->clientId)['invoice_id'];
+        $legacy = rtrim((string) config('ledgerlift.legacy_url'), '/')."/invoices/view/$id";
+
+        $page = $this->continueSession()->get("/invoices/view/$id")->assertOk()
+            ->assertSee("invoice_id: $id,", false)
+            ->assertSee('"'.url('invoices/view').'/" + '.$id.';', false)
+            ->assertSee('<a id="invoice_change_client" href="'.$legacy.'"', false)
+            ->assertDontSee('modal_create_recurring')->assertDontSee('modal_change_client')->assertDontSee('modal_change_user')
+            ->assertDontSee('modal_copy_invoice')->assertDontSee('modal_create_credit')->assertDontSee('modal_task_lookups')
+            ->assertDontSee('btn_create_credit')->assertDontSee('btn_copy_invoice')->assertDontSee('btn_create_recurring');
+
+        // Create credit invoice, create recurring, copy invoice, the change-client icon and "add task".
+        expect(substr_count($page->getContent(), 'href="'.$legacy.'"'))->toBe(5);
+    });
+
     it('deletes a draft and its orphans, and refuses a sent invoice', function () {
         $draft = invCreate($this, $this->clientId)['invoice_id'];
         $sent = invCreate($this, $this->clientId)['invoice_id'];

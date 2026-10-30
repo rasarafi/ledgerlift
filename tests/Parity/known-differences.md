@@ -67,10 +67,19 @@ deliberate live in `intentional-differences.php`.
   (a sumex invoice shows the standard view, and `invoices/ajax/save` does not store its sumex fields; `invoices/ajax/create`
   still adds the sumex row for a sumex group), no responsive item list (`show_responsive_itemlist` is ignored) and no
   attachments: the attachments panel is there without its "Add files" button and dropzone script, since uploads are not ported.
-  The copy, credit, recurring, change-client and change-user modals of its menus are not ported (their entries load nothing),
-  and "Add task" loads the legacy task lookup, which a browser refuses cross-origin. "Enter payment" comes with payments.
+  The copy-invoice, create-credit, create-recurring, change-client, change-user and "Add task" actions open the invoice
+  in the legacy app (plain links to `invoices/view/{id}` there); legacy opens their modals in place. "Enter payment" comes with
+  payments.
 - **Invoices, crafted requests.** `invoices/ajax/create`, `save`, `save_invoice_tax_rate` and `delete_item` take POST only (legacy
   answers a GET as a post without fields: `{"success":0,"validation_errors":[]}` for create and save). A non-AJAX GET of
   `invoices/ajax/delete_item/{id}` is a 404 here (legacy's AJAX check answers an empty page first). A create without
   `user_id` (the modal always posts it) takes the logged-in user; legacy fails on the NOT NULL column. A non-numeric list
   offset is a 404 here; legacy fails with a PHP error.
+- **Non-numeric ids.** Every id, offset and page in a URL must be digits here, in every module: `invoices/view/1-alert(1)`
+  is a 404. Legacy lets MySQL coerce the segment to 1, renders that record, and prints the raw segment into the page's scripts
+  (a reflected XSS that ledgerlift closes); scripts here get the record's own integer id.
+- **Invoices, crafted saves.** A save posted without `invoice_id` makes legacy INSERT a row, which fails on its NOT NULL
+  columns; ledgerlift updates no invoice, recalculates invoice 0 (which writes an amounts row with `invoice_id` 0) and answers success. A whitespace-only `invoice_number` skips the unique check
+  here (Laravel treats it as empty); CI's `is_unique` runs on it. A JSON object (not a list) in `items` is ignored here; legacy
+  iterates its properties. As on legacy, the keys of each item in `items` are written as the item's columns: the one write path
+  that does not persist only the fields of the validation rules.

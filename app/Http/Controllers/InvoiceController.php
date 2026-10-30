@@ -59,7 +59,8 @@ class InvoiceController extends Controller
 
         return view('invoices.view', [
             'invoice' => $invoice,
-            'invoiceId' => $id,
+            // The record's own id, never the URL segment, goes into the page's scripts.
+            'invoiceId' => (int) $invoice->invoice_id,
             // Mdl_items: amounts, tax rate and product left joined, by item_order.
             'items' => DB::table('ip_invoice_items')
                 ->leftJoin('ip_invoice_item_amounts', 'ip_invoice_item_amounts.item_id', '=', 'ip_invoice_items.item_id')

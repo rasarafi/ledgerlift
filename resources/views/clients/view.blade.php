@@ -3,7 +3,7 @@
 @section('content')
 <script>
     $(function () {
-        const client_id = {{ $client->client_id }};
+        const client_id = @json((int) $client->client_id);
         function add_delete_client_notes_click_event(){
             $('.delete_client_note').click(delete_client_note);
         }

@@ -17,7 +17,9 @@ use App\Http\Controllers\UnitController;
 use Illuminate\Support\Facades\Route;
 
 // Legacy URLs are HMVC (module/controller/method) and CodeIgniter answers any method;
-// each action checks the method itself where it matters.
+// each action checks the method itself where it matters. Every id, offset and page is
+// numeric: legacy lets MySQL coerce "1-alert(1)" to 1 and prints the raw segment into its
+// scripts; here such a segment is a 404.
 Route::get('/sessions', [SessionController::class, 'index']);
 Route::match(['get', 'post'], '/sessions/login', [SessionController::class, 'login']);
 Route::get('/sessions/logout', [SessionController::class, 'logout']);
@@ -37,25 +39,25 @@ Route::middleware('admin')->group(function () {
         'products' => ProductController::class,
     ] as $module => $controller) {
         Route::get($module, [$controller, 'index']);
-        Route::get($module.'/index/{offset?}', [$controller, 'index'])->where('offset', '[0-9]+');
-        Route::match(['get', 'post'], $module.'/form/{id?}', [$controller, 'form']);
-        Route::post($module.'/delete/{id}', [$controller, 'delete']);
+        Route::get($module.'/index/{offset?}', [$controller, 'index'])->whereNumber('offset');
+        Route::match(['get', 'post'], $module.'/form/{id?}', [$controller, 'form'])->whereNumber('id');
+        Route::post($module.'/delete/{id}', [$controller, 'delete'])->whereNumber('id');
     }
 
     // Clients: the list is split by status, the view by tab, and a deleted client takes its invoices with it.
     Route::get('clients', [ClientController::class, 'index']);
-    Route::get('clients/status/{status?}/{offset?}', [ClientController::class, 'status'])->where('offset', '[0-9]+');
-    Route::match(['get', 'post'], 'clients/form/{id?}', [ClientController::class, 'form']);
-    Route::get('clients/view/{id}/{tab?}/{page?}', [ClientController::class, 'view'])->where('page', '[0-9]+');
-    Route::post('clients/delete/{id}', [ClientController::class, 'delete']);
+    Route::get('clients/status/{status?}/{offset?}', [ClientController::class, 'status'])->whereNumber('offset');
+    Route::match(['get', 'post'], 'clients/form/{id?}', [ClientController::class, 'form'])->whereNumber('id');
+    Route::get('clients/view/{id}/{tab?}/{page?}', [ClientController::class, 'view'])->whereNumber(['id', 'page']);
+    Route::post('clients/delete/{id}', [ClientController::class, 'delete'])->whereNumber('id');
 
     // Invoices: the list by status, the view, and the deletes (a draft, unless ENABLE_INVOICE_DELETION).
     Route::get('invoices', [InvoiceController::class, 'index']);
     Route::get('invoices/index', [InvoiceController::class, 'index']);
-    Route::get('invoices/status/{status?}/{offset?}', [InvoiceController::class, 'status'])->where('offset', '[0-9]+');
-    Route::get('invoices/view/{id}', [InvoiceController::class, 'view']);
-    Route::post('invoices/delete/{id}', [InvoiceController::class, 'delete']);
-    Route::post('invoices/delete_invoice_tax/{invoiceId}/{invoiceTaxRateId}', [InvoiceController::class, 'deleteInvoiceTax']);
+    Route::get('invoices/status/{status?}/{offset?}', [InvoiceController::class, 'status'])->whereNumber('offset');
+    Route::get('invoices/view/{id}', [InvoiceController::class, 'view'])->whereNumber('id');
+    Route::post('invoices/delete/{id}', [InvoiceController::class, 'delete'])->whereNumber('id');
+    Route::post('invoices/delete_invoice_tax/{invoiceId}/{invoiceTaxRateId}', [InvoiceController::class, 'deleteInvoiceTax'])->whereNumber(['invoiceId', 'invoiceTaxRateId']);
 });
 
 // Base_Controller: an AJAX controller answers nothing to a plain request, before the login check.
@@ -65,7 +67,7 @@ Route::middleware(['ajax', 'admin'])->group(function () {
     Route::post('/filter/ajax/filter_clients', [FilterAjaxController::class, 'filterClients']);
     Route::post('/filter/ajax/filter_invoices', [FilterAjaxController::class, 'filterInvoices']);
 
-    Route::get('/products/ajax/modal_product_lookups/{rand?}', [ProductAjaxController::class, 'modalProductLookups']);
+    Route::get('/products/ajax/modal_product_lookups/{rand?}', [ProductAjaxController::class, 'modalProductLookups'])->whereNumber('rand');
     Route::post('/products/ajax/process_product_selections', [ProductAjaxController::class, 'processProductSelections']);
 
     Route::get('/clients/ajax/name_query', [ClientAjaxController::class, 'nameQuery']);
@@ -79,5 +81,5 @@ Route::middleware(['ajax', 'admin'])->group(function () {
     Route::post('/invoices/ajax/create', [InvoiceAjaxController::class, 'create']);
     Route::post('/invoices/ajax/save', [InvoiceAjaxController::class, 'save']);
     Route::post('/invoices/ajax/save_invoice_tax_rate', [InvoiceAjaxController::class, 'saveInvoiceTaxRate']);
-    Route::post('/invoices/ajax/delete_item/{invoiceId}', [InvoiceAjaxController::class, 'deleteItem']);
+    Route::post('/invoices/ajax/delete_item/{invoiceId}', [InvoiceAjaxController::class, 'deleteItem'])->whereNumber('invoiceId');
 });

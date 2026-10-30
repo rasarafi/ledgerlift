@@ -5,7 +5,8 @@
 @section('content')
 @php
     // views/invoices/view.php, LEGACY_CALCULATION=true. Not ported: custom fields, e-invoicing (its
-    // `einvoicing` setting stays unset), the sumex view, the responsive item list and attachments.
+    // `einvoicing` setting stays unset), the sumex view, the responsive item list, attachments and
+    // the modals behind $legacyView.
     if (config('ledgerlift.disable_read_only') == true) {
         $invoice->is_read_only = 0;
     }
@@ -15,6 +16,9 @@
     $canSave = $invoice->is_read_only != 1 || $invoice->invoice_status_id != 4;
     $readOnlyPaid = $invoice->is_read_only == 1 && $invoice->invoice_status_id == 4;
     $disabled = $invoice->is_read_only ? 'disabled="disabled"' : '';
+    // Actions whose modals are not ported (credit, recurring, copy, change client/user, add task)
+    // are plain links to this invoice on the legacy app.
+    $legacyView = Strangler::legacy('invoices/view/'.$invoiceId);
 @endphp
 
 <script>
@@ -31,10 +35,6 @@
             $('#modal-placeholder').load("{{ url('products/ajax/modal_product_lookups') }}/" + Math.floor(Math.random() * 1000));
         });
 
-        $('.btn_add_task').click(function () {
-            $('#modal-placeholder').load("{{ Strangler::url('tasks/ajax/modal_task_lookups/'.$invoiceId) }}/" + Math.floor(Math.random() * 1000));
-        });
-
         $('.btn_add_row').click(function () {
             $('#new_row').clone().appendTo('#item_table').removeAttr('id').addClass('item').show();
             // Legacy:no: check items tax usage is correct (ReLoad on change)
@@ -48,27 +48,6 @@
         // Legacy:no: check items tax usage is correct (Load on change)
         $(document).on('loaded', check_items_tax_usages());
 
-        $('#btn_create_recurring').click(function () {
-            $('#modal-placeholder').load("{{ url('invoices/ajax/modal_create_recurring') }}", {
-                invoice_id: {{ $invoiceId }}
-            });
-        });
-@if ($isDraft)
-
-        $('#invoice_change_client').click(function () {
-            $('#modal-placeholder').load("{{ url('invoices/ajax/modal_change_client') }}", {
-                invoice_id: {{ $invoiceId }},
-                client_id: "{{ $invoice->client_id }}",
-            });
-        });
-
-        $('#invoice_change_user').click(function () {
-            $('#modal-placeholder').load("{{ url('invoices/ajax/modal_change_user') }}", {
-                invoice_id: {{ $invoiceId }},
-                user_id: "{{ $invoice->user_id }}",
-            });
-        });
-@endif
 
         $('#btn_save_invoice').click(function () {
             var items = [];
@@ -88,7 +67,7 @@
             });
             $.post("{{ url('invoices/ajax/save') }}", {
                     legacy_calculation: 1,
-                    invoice_id: {{ $invoiceId }},
+                    invoice_id: @json($invoiceId),
                     invoice_number: $('#invoice_number').val(),
                     invoice_date_created: $('#invoice_date_created').val(),
                     invoice_date_due: $('#invoice_date_due').val(),
@@ -104,7 +83,7 @@
                 function (data) {
                     var response = json_parse(data, {{ (int) config('app.debug') }});
                     if (response.success === 1) {
-                        window.location = "{{ url('invoices/view') }}/" + {{ $invoiceId }};
+                        window.location = "{{ url('invoices/view') }}/" + @json($invoiceId);
                     } else {
                         $('#fullpage-loader').hide();
                         $('.control-group').removeClass('has-error');
@@ -223,9 +202,9 @@
         </a>
 @if ($isDraft)
 
-        <span id="invoice_change_user" class="fa fa-fw fa-edit text-{{ $itsMine ? 'muted' : 'danger' }} cursor-pointer"
+        <a id="invoice_change_user" href="{{ $legacyView }}" class="fa fa-fw fa-edit text-{{ $itsMine ? 'muted' : 'danger' }} cursor-pointer"
               data-toggle="tooltip" data-placement="bottom"
-              title="{!! __('ip.change_user') !!}"></span>
+              title="{!! __('ip.change_user') !!}"></a>
 @endif
 @endif
     </h1>
@@ -245,8 +224,7 @@
                 </li>
 @endif
                 <li>
-                    <a href="#" id="btn_create_credit"
-                       data-invoice-id="{{ $invoiceId }}">
+                    <a href="{{ $legacyView }}">
                         <i class="fa fa-minus fa-margin"></i> {!! __('ip.create_credit_invoice') !!}
                     </a>
                 </li>
@@ -277,16 +255,13 @@
                 </li>
                 <li class="divider"></li>
                 <li>
-                    <a href="#" id="btn_create_recurring"
-                       data-invoice-id="{{ $invoiceId }}">
+                    <a href="{{ $legacyView }}">
                         <i class="fa fa-refresh fa-margin"></i>
                         {!! __('ip.create_recurring') !!}
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="btn_copy_invoice"
-                       data-invoice-id="{{ $invoiceId }}"
-                       data-client-id="{{ $invoice->client_id }}">
+                    <a href="{{ $legacyView }}">
                         <i class="fa fa-copy fa-margin"></i>
                         {!! __('ip.copy_invoice') !!}
                     </a>
@@ -337,9 +312,9 @@
                     <h2>
                         <a href="{{ url('clients/view/'.$invoice->client_id) }}">{{ format_client($invoice) }}</a>
 @if ($isDraft)
-                        <span id="invoice_change_client" class="fa fa-edit cursor-pointer small"
+                        <a id="invoice_change_client" href="{{ $legacyView }}" class="fa fa-edit cursor-pointer small"
                               data-toggle="tooltip" data-placement="bottom"
-                              title="{!! __('ip.change_client') !!}"></span>
+                              title="{!! __('ip.change_client') !!}"></a>
 @endif
                     </h2>
                     <br>

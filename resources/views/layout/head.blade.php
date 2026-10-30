@@ -53,19 +53,7 @@
             $('#modal-placeholder').load("{{ Strangler::url('invoices/ajax/modal_create_invoice') }}");
         });
 
-        $(document).on('click', '#btn_copy_invoice', function () {
-            var invoice_id = $(this).data('invoice-id');
-            var client_id = $(this).data('client-id');
-            $('#modal-placeholder').load("{{ Strangler::url('invoices/ajax/modal_copy_invoice') }}", {
-                invoice_id: invoice_id,
-                client_id: client_id
-            });
-        });
-
-        $(document).on('click', '#btn_create_credit', function () {
-            var invoice_id = $(this).data('invoice-id');
-            $('#modal-placeholder').load("{{ Strangler::url('invoices/ajax/modal_create_credit') }}", {invoice_id: invoice_id});
-        });
+        {{-- The copy-invoice and credit-invoice handlers are not ported: those actions link to the legacy app. --}}
 
         $(document).on('click', '.client-create-invoice', function () {
             var client_id = $(this).data('client-id');

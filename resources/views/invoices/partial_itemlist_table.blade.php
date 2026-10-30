@@ -4,6 +4,7 @@
     (layout/partial/itemlist_table_item_discount_input.php and _show.php,
     partial_itemlist_table_invoice_discount.php, inlined).
 --}}
+@use('App\Support\Strangler')
 @php
     $invoiceDisabled = $invoice->is_read_only != 1 ? '' : ' disabled="disabled"';
     $currencySymbol = get_setting('currency_symbol');
@@ -298,7 +299,8 @@
                     <i class="fa fa-database"></i>
                     {!! __('ip.add_product') !!}
                 </a>
-                <a href="javascript:void(0);" class="btn_add_task btn btn-sm btn-default{{ get_setting('projects_enabled') == 1 ? '' : ' hidden' }}">
+                {{-- Tasks are not ported: "add task" opens the invoice on the legacy app. --}}
+                <a href="{{ Strangler::legacy('invoices/view/'.$invoiceId) }}" class="btn_add_task btn btn-sm btn-default{{ get_setting('projects_enabled') == 1 ? '' : ' hidden' }}">
                     <i class="fa fa-database"></i> {!! __('ip.add_task') !!}
                 </a>
             @endif
