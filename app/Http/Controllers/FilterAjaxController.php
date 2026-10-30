@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Family;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -21,6 +22,23 @@ class FilterAjaxController extends Controller
         }
 
         return view('families.partial_families_table', ['rows' => $families->get()]);
+    }
+
+    /** Ajax::filter_products(): every keyword has to appear in the SKU, family, name, description, price or tariff. */
+    public function filterProducts(Request $request): View
+    {
+        $products = Product::query()->listing();
+
+        foreach (explode(' ', (string) $request->post('filter_query')) as $keyword) {
+            if ($keyword) {
+                $products->whereRaw(
+                    "CONCAT_WS('^',product_sku,LOWER(family_name),LOWER(product_name),LOWER(product_description),product_price,product_tariff) LIKE ? ESCAPE '!'",
+                    ['%'.$this->escapeLike(mb_strtolower($keyword)).'%'],
+                );
+            }
+        }
+
+        return view('products.partial_products_table', ['rows' => $products->get()]);
     }
 
     /** CI's escape_like_str(): `!` is the escape character of its LIKE clauses. */

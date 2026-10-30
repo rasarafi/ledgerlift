@@ -49,9 +49,11 @@ final class AppClient
     /**
      * @param  array<string, mixed>  $query
      */
-    public function get(string $path, array $query = []): Response
+    public function get(string $path, array $query = [], bool $ajax = false): Response
     {
-        return $this->record($this->request()->get($path, $query));
+        $request = $ajax ? $this->request()->withHeaders(['X-Requested-With' => 'XMLHttpRequest']) : $this->request();
+
+        return $this->record($request->get($path, $query));
     }
 
     /**

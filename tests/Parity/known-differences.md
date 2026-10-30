@@ -26,9 +26,10 @@ deliberate live in `intentional-differences.php`.
   1.4.7 as the newest applied version (`019_1.4.7.sql` is applied last by timestamp).
 - **Create Quote** in the navbar is a plain link to legacy `quotes/index`; legacy opens a modal.
 - **Deleting a record.** Legacy v1.7.2 never deletes through `Admin_Controller::ensure_valid_post_request()`
-  (tax rates, families, units, payment methods, invoice groups). CodeIgniter's global CSRF check removes `_ip_csrf` from `$_POST`, then
+  (tax rates, families, units, payment methods, invoice groups, products). CodeIgniter's global CSRF check removes `_ip_csrf` from `$_POST`, then
   `verify_csrf_token()` looks for it there, finds nothing and refuses: legacy flashes the raw lang key
-  `invalid_request`, redirects (to `<module>/index`, `families` for families) and keeps the row.
+  `invalid_request`, redirects (to `<module>/index`, `families` for families) and keeps the row. Products behave like the rest
+  (`Mdl_products::delete()` is a plain `DELETE ... WHERE product_id = id`, no other cleanup).
   ledgerlift deletes the record, flashes "Record successfully deleted" (what `Response_Model::delete()`
   was written to do) and redirects to `<module>`. The parity scenarios record both answers and remove the
   row from the legacy database by hand so the two end states can still be diffed.

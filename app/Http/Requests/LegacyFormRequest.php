@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Validator;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Validator;
  */
 abstract class LegacyFormRequest extends FormRequest
 {
-    /** @return array<string, string> */
+    /** @return array<string, string|list<ValidationRule>> */
     abstract public function rules(): array;
 
     public function validateResolved(): void {}

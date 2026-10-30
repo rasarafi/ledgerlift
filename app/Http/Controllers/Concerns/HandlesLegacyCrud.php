@@ -77,13 +77,13 @@ trait HandlesLegacyCrud
             $form = $this->newFormValues($form);
         }
 
-        return view($this->module.'.form', ['form' => $form])->withErrors($errors ?? []);
+        return view($this->module.'.form', ['form' => $form] + $this->formData())->withErrors($errors ?? []);
     }
 
     /** Response_Model::delete() */
     public function delete(Request $request, string $id): RedirectResponse
     {
-        $this->query()->where($this->keyName(), $id)->delete();
+        $this->model::query()->where($this->keyName(), $id)->delete();
 
         return LegacyRedirect::to($request, url($this->module))
             ->with('alert_success', __('ip.record_successfully_deleted'));
@@ -99,6 +99,16 @@ trait HandlesLegacyCrud
 
     /** @return array<string, mixed> */
     protected function indexData(): array
+    {
+        return [];
+    }
+
+    /**
+     * What the form lists besides the record, such as the options of its select boxes.
+     *
+     * @return array<string, mixed>
+     */
+    protected function formData(): array
     {
         return [];
     }
