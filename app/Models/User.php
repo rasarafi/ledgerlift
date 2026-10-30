@@ -2,28 +2,38 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
+/**
+ * ip_users. The password lives in user_password (60-char bcrypt, or the legacy
+ * salted format that Task 6 upgrades on login). The table has no remember-token
+ * column, so the token name is empty and Laravel never reads or writes one.
+ */
 class User extends Authenticatable
 {
-    use Notifiable;
+    protected $table = 'ip_users';
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected $primaryKey = 'user_id';
+
+    public $timestamps = false;
+
+    protected $guarded = [];
+
+    protected $hidden = ['user_password', 'user_psalt', 'user_passwordreset_token'];
+
+    public function getAuthPasswordName(): string
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return 'user_password';
+    }
+
+    public function getRememberTokenName(): string
+    {
+        return '';
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class, 'user_id');
     }
 }
