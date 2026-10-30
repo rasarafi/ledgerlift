@@ -15,6 +15,12 @@ final class LegacyJson
      */
     public static function make(array $payload): Response
     {
-        return new Response(json_encode($payload), 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+        return self::text((string) json_encode($payload));
+    }
+
+    /** A body that is already JSON (or, where legacy echoes twice, several documents), served as text/html. */
+    public static function text(string $body): Response
+    {
+        return new Response($body, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
     }
 }

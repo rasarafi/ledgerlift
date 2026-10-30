@@ -42,7 +42,8 @@ it('reports changed values, and rows present on one side only, ordered by primar
     $admin->statement('INSERT INTO `'.DBDIFFTEST_B.'`.ip_quote_item_amounts VALUES (2, 1, 5.50)');
     $admin->statement('UPDATE `'.DBDIFFTEST_B.'`.ip_quote_item_amounts SET amount = 21.00 WHERE quote_id = 1 AND item_id = 2');
 
-    expect(DbDiff::compare(DBDIFFTEST_A, DBDIFFTEST_B))->toBe([
+    // Without normalise.php, which names the real ip_clients dates.
+    expect(DbDiff::compare(DBDIFFTEST_A, DBDIFFTEST_B, []))->toBe([
         ['table' => 'ip_clients', 'pk' => '1', 'column' => DbDiff::ROW, 'legacy' => '{"client_id":1,"client_name":"Ashgrove Joinery","client_date_modified":"2026-01-01 00:00:00"}', 'new' => null],
         ['table' => 'ip_clients', 'pk' => '2', 'column' => 'client_name', 'legacy' => 'Bellmont Lighting Co', 'new' => 'Bellmont Lights'],
         ['table' => 'ip_quote_item_amounts', 'pk' => '1,2', 'column' => 'amount', 'legacy' => '20.00', 'new' => '21.00'],

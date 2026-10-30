@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Responses\LegacyJson;
 use App\Models\Family;
 use App\Models\Product;
+use App\Support\LegacyLike;
 use App\Support\XssClean;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -29,7 +30,7 @@ class ProductAjaxController extends Controller
         }
 
         if (! empty($filterProduct)) {
-            $like = '%'.$this->escapeLike($filterProduct).'%';
+            $like = '%'.LegacyLike::escape($filterProduct).'%';
             $products->where(fn ($group) => $group
                 ->whereRaw("ip_products.product_sku LIKE ? ESCAPE '!'", [$like])
                 ->orWhereRaw("ip_products.product_name LIKE ? ESCAPE '!'", [$like])
@@ -73,11 +74,5 @@ class ProductAjaxController extends Controller
         $value = $request->query($key);
 
         return is_string($value) ? $xss->clean($value) : null;
-    }
-
-    /** CI's escape_like_str(): `!` is the escape character of its LIKE clauses. */
-    private function escapeLike(string $keyword): string
-    {
-        return str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $keyword);
     }
 }

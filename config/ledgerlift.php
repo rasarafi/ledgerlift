@@ -10,6 +10,16 @@ return [
 
     'legacy_url' => env('LEGACY_URL', 'http://localhost:8091'),
 
+    // config.php: ENABLE_INVOICE_DELETION (invoices other than drafts may be deleted) and
+    // DISABLE_READ_ONLY (invoices are never read-only).
+    'enable_invoice_deletion' => (bool) env('ENABLE_INVOICE_DELETION', false),
+    'disable_read_only' => (bool) env('DISABLE_READ_ONLY', false),
+
+    // config.php: ENABLE_INVOICE_DELETION (invoices other than drafts may be deleted) and
+    // DISABLE_READ_ONLY (invoices are never read-only).
+    'enable_invoice_deletion' => (bool) env('ENABLE_INVOICE_DELETION', false),
+    'disable_read_only' => (bool) env('DISABLE_READ_ONLY', false),
+
     // Admin_Controller::setCacheHeaders(): X_FRAME_OPTIONS.
     'x_frame_options' => env('X_FRAME_OPTIONS', 'SAMEORIGIN'),
 
