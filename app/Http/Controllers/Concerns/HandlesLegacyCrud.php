@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Concerns;
 
+use App\Http\Requests\LegacyFormRequest;
 use App\Http\Responses\LegacyRedirect;
 use App\Support\LegacyPager;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,6 +16,16 @@ use Illuminate\View\View;
  * index, form and delete of a reference-data module, as MY_Model, Response_Model and the
  * module controllers do them. A controller names its module (the route prefix and the
  * `<module>.index` / `<module>.form` views), its model and its request.
+ *
+ * Properties the using controller declares:
+ *
+ * @property string $module
+ * @property class-string<Model> $model
+ * @property class-string<LegacyFormRequest> $formRequest
+ * @property string|null $orderBy Column the list is sorted by; null leaves it in table order.
+ * @property array{column: string, requires: list<string>, message: string}|null $uniqueGuard
+ *                                                                                            The duplicate check of a new record: the unique column, the fields that must be non-empty
+ *                                                                                            for it to run, and the lang key of its message. Null: no check, and no `is_update` field.
  */
 trait HandlesLegacyCrud
 {

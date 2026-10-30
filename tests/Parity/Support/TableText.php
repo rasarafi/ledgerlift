@@ -3,6 +3,7 @@
 namespace Tests\Parity\Support;
 
 use DOMDocument;
+use DOMNode;
 use DOMXPath;
 
 /**
@@ -12,7 +13,8 @@ use DOMXPath;
 final class TableText
 {
     /**
-     * @return list<list<string>> One list of cell texts (th and td) per row of the first table matching `$xpath`.
+     * @return list<list<string>> One list of cell texts (th and td) per row of the first table matching `$xpath`;
+     *                            rows of tables nested in it are left out.
      */
     public static function rows(string $html, string $xpath = '//table'): array
     {
@@ -21,8 +23,13 @@ final class TableText
         $page = new DOMXPath($document);
 
         $rows = [];
+        $table = $page->query("($xpath)[1]")?->item(0);
 
-        foreach ($page->query($xpath.'[1]//tr') ?: [] as $row) {
+        foreach ($table === null ? [] : $page->query('.//tr', $table) as $row) {
+            if (! self::belongsTo($row, $table)) {
+                continue;
+            }
+
             $cells = [];
 
             foreach ($page->query('./th|./td', $row) ?: [] as $cell) {
@@ -33,5 +40,16 @@ final class TableText
         }
 
         return $rows;
+    }
+
+    private static function belongsTo(DOMNode $row, DOMNode $table): bool
+    {
+        for ($node = $row->parentNode; $node !== null; $node = $node->parentNode) {
+            if ($node->nodeName === 'table') {
+                return $node->isSameNode($table);
+            }
+        }
+
+        return false;
     }
 }

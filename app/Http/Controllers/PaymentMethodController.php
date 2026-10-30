@@ -24,5 +24,6 @@ class PaymentMethodController extends Controller
      */
     protected ?string $orderBy = null;
 
+    /** @var array{column: string, requires: list<string>, message: string}|null */
     protected ?array $uniqueGuard = ['column' => 'payment_method_name', 'requires' => ['payment_method_name'], 'message' => 'payment_method_already_exists'];
 }

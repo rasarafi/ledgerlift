@@ -55,20 +55,9 @@ final class XssClean
 
     private ?string $hash = null;
 
-    /**
-     * @param  string|array<array-key, mixed>  $value
-     * @return ($value is string ? string : array<array-key, mixed>)
-     */
-    public function clean(string|array $value): string|array
+    /** CI_Security::xss_clean() of one string; FilterLegacyInput walks arrays. */
+    public function clean(string $value): string
     {
-        if (is_array($value)) {
-            foreach ($value as $key => $item) {
-                $value[$key] = is_string($item) || is_array($item) ? $this->clean($item) : $item;
-            }
-
-            return $value;
-        }
-
         $str = $this->removeInvisibleCharacters($value);
 
         // Decode URL-encoded stuff, repeatedly (rawurldecode keeps plus signs).

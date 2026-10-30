@@ -20,5 +20,6 @@ class UnitController extends Controller
 
     protected ?string $orderBy = 'unit_name';
 
+    /** @var array{column: string, requires: list<string>, message: string}|null */
     protected ?array $uniqueGuard = ['column' => 'unit_name', 'requires' => ['unit_name', 'unit_name_plrl'], 'message' => 'unit_already_exists'];
 }

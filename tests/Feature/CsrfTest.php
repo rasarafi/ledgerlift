@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
 const LOGIN_FIELDS = ['email' => 'admin@ledgerlift.test', 'password' => 'ledgerlift-demo-1', 'btn_login' => 'true'];
 
 beforeEach(function () {
@@ -36,4 +39,13 @@ it('puts the current token in the X-_ip_csrf response header', function () {
     $response = $this->get('/sessions/login');
 
     $response->assertHeader('X-_ip_csrf', csrf_token());
+});
+
+it('removes the token field from the request once it has been verified, as CI does', function () {
+    Route::middleware('web')->post('/probe/token-field', fn (Request $request) => response()->json($request->post()));
+    $this->enforceCsrf();
+
+    $this->get('/sessions/login');
+    $this->continueSession()->post('/probe/token-field', ['_ip_csrf' => csrf_token(), 'kept' => 'yes'])
+        ->assertExactJson(['kept' => 'yes']);
 });

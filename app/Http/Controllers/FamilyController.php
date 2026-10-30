@@ -20,6 +20,7 @@ class FamilyController extends Controller
 
     protected ?string $orderBy = 'family_name';
 
+    /** @var array{column: string, requires: list<string>, message: string}|null */
     protected ?array $uniqueGuard = ['column' => 'family_name', 'requires' => ['family_name'], 'message' => 'family_already_exists'];
 
     protected function indexData(): array

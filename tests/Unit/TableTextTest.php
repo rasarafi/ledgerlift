@@ -15,3 +15,9 @@ it('reads the cell texts of the first table, collapsing whitespace only', functi
     ])->and(TableText::rows($html, '//table[2]'))->toBe([['other']])
         ->and(TableText::rows('<p>no table</p>'))->toBe([]);
 });
+
+it('leaves out the rows of a table nested in a cell', function () {
+    $html = '<table><tr><td>outer<table><tr><td>inner</td></tr></table></td><td>x</td></tr><tr><td>b</td><td>y</td></tr></table>';
+
+    expect(TableText::rows($html))->toBe([['outerinner', 'x'], ['b', 'y']]);
+});

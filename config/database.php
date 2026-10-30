@@ -57,9 +57,11 @@ return [
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
             'prefix' => '',
             'prefix_indexes' => true,
-            // Legacy's `stricton => false` strips the strict modes from the session, so a value a column
-            // cannot hold (a percent of "7,5" under another decimal point) is cut with a warning, not refused.
-            'strict' => false,
+            // Legacy's `stricton => false` (mysqli_driver.php:153) strips STRICT_ALL_TABLES and
+            // STRICT_TRANS_TABLES from the server's sql_mode, so a value a column cannot hold (a percent of
+            // "7,5" under another decimal point) is cut with a warning, not refused. The compose server runs
+            // STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION; this is what is left.
+            'modes' => ['ERROR_FOR_DIVISION_BY_ZERO', 'NO_ENGINE_SUBSTITUTION'],
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),

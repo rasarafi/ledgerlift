@@ -13,10 +13,10 @@ final class LegacyPager
         public readonly int $total,
     ) {}
 
-    /** `default_list_limit`, or 15 when it is unset (MY_Model::$default_limit). */
+    /** `default_list_limit`, or 15 when it is empty or 0 (MY_Model::paginate(): `empty($default_list_limit)`). */
     public static function defaultPerPage(): int
     {
-        return (int) get_setting('default_list_limit', 15);
+        return (int) get_setting('default_list_limit') ?: 15;
     }
 
     public function previousOffset(): int

@@ -20,6 +20,7 @@ class InvoiceGroupController extends Controller
 
     protected ?string $orderBy = 'invoice_group_name';
 
+    /** @var array{column: string, requires: list<string>, message: string}|null */
     protected ?array $uniqueGuard = null;
 
     /**

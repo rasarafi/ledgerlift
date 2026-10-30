@@ -114,6 +114,14 @@ it('creates, edits, rejects an invalid save, cancels and deletes', function (str
         $steps['edit'] = referenceSubmit($app, "$name/form/$id", $module['edit']);
         $steps['after edit'] = referencePage($app, $name);
 
+        // Only the CSRF token posted: it is consumed before the controller, nothing is left to save.
+        $tokenOnly = $app->post("$name/form/$id");
+        $steps['token-only post'] = [
+            'status' => $tokenOnly->status(),
+            'errors' => $app->texts('//div[@class="alert alert-danger"]'),
+            'inputs' => referenceInputs($app, $module['inputs']),
+        ];
+
         $steps['invalid'] = referenceSubmit($app, "$name/form", $module['invalid']);
         $steps['invalid on edit'] = referenceSubmit($app, "$name/form/$id", $module['invalid']);
         $steps['after invalid'] = referencePage($app, $name);
@@ -126,7 +134,8 @@ it('creates, edits, rejects an invalid save, cancels and deletes', function (str
         $steps['delete over GET'] = referencePage($app, "$name/delete/$id");
 
         // Legacy v1.7.2 refuses every delete (see known-differences.md): its answer is recorded
-        // apart, and its row is removed by hand so the two databases end alike.
+        // apart, and the model-level delete (Mdl_x::delete(): DELETE ... WHERE pk = id) is applied
+        // to its database by SQL so the two databases end alike.
         $delete = referenceSubmit($app, "$name/delete/$id", []);
         $deleted[$side] = [$delete['location'], referencePage($app, $name)['flash']];
         $steps['delete status'] = $delete['status'];
@@ -288,8 +297,8 @@ it('stores markup in names as the XSS filter leaves it', function () {
         return $steps;
     });
 
-    // Header + the 2 fixture families + 6 of the 7 values: the last one is cleaned to the
-    // name of the first ("[removed]") and refused as a duplicate.
+    // Header + the 2 fixture families + 6 of the 7 values: the last one ("j a v a s c r i p t :")
+    // is cleaned to "[removed]", the name the fifth ("%3Cscript%3E") was stored under, and refused as a duplicate.
     expect($result->legacy['list']['rows'])->toHaveCount(1 + 2 + 6)
         ->and($result->legacy['family 6']['location'])->toBe('families/form');
     expect($result)->toMatchAcrossApps()->toHaveNoDifferences();

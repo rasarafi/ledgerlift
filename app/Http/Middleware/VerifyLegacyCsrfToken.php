@@ -21,7 +21,12 @@ class VerifyLegacyCsrfToken extends PreventRequestForgery
     public function handle($request, Closure $next)
     {
         try {
-            $response = parent::handle($request, $next);
+            // CI_Security::csrf_verify() unsets $_POST['_ip_csrf'] once it has checked it.
+            $response = parent::handle($request, function ($request) use ($next) {
+                $request->request->remove(self::FIELD);
+
+                return $next($request);
+            });
         } catch (TokenMismatchException) {
             // CodeIgniter answers a failed check with 403, not Laravel's 419.
             throw new HttpException(403, 'The action you have requested is not allowed.');

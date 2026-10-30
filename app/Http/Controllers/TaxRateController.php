@@ -21,6 +21,7 @@ class TaxRateController extends Controller
 
     protected ?string $orderBy = 'tax_rate_percent';
 
+    /** @var array{column: string, requires: list<string>, message: string}|null */
     protected ?array $uniqueGuard = null;
 
     /**

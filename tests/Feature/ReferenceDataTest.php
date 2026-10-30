@@ -54,6 +54,15 @@ describe('index', function () {
             ->assertSee('href="'.url('tax_rates/index/0').'" title="Prev"', false);
     });
 
+    it('falls back to 15 rows a page when default_list_limit is 0', function () {
+        taxRates(17);
+        DB::table('ip_settings')->insert(['setting_key' => 'default_list_limit', 'setting_value' => '0']);
+
+        $page = $this->continueSession()->get('/tax_rates')->assertOk();
+        expect(substr_count($page->getContent(), '<tr>'))->toBe(15 + 1)
+            ->and($page->getContent())->toContain('href="'.url('tax_rates/index/15').'" title="Next"');
+    });
+
     it('lists payment methods in table order and the others sorted', function () {
         DB::table('ip_payment_methods')->insert([['payment_method_name' => 'Zeta'], ['payment_method_name' => 'Alpha']]);
         DB::table('ip_units')->insert([
@@ -123,6 +132,22 @@ describe('form', function () {
             ->assertSee('value="8.00"', false);
 
         expect(DB::table('ip_tax_rates')->count())->toBe(0);
+    });
+
+    it('does not hand the CSRF token on to the controller, and re-renders a token-only post as legacy', function () {
+        $id = DB::table('ip_tax_rates')->insertGetId(['tax_rate_name' => 'Old', 'tax_rate_percent' => 15]);
+        $this->enforceCsrf();
+
+        // CI_Security::csrf_verify() unsets $_POST['_ip_csrf']: nothing is left to validate, the
+        // record is loaded (MY_Model::prep_form() sees an empty $_POST) and both fields are reported.
+        $this->continueSession()->post("/tax_rates/form/$id", ['_ip_csrf' => csrf_token()])
+            ->assertOk()
+            ->assertSee('<div class="alert alert-danger">The Tax Rate Name field is required.</div>', false)
+            ->assertSee('<div class="alert alert-danger">The Tax Rate Percent field is required.</div>', false)
+            ->assertSee('value="Old"', false)
+            ->assertSee('value="15.00"', false);
+
+        expect(DB::table('ip_tax_rates')->value('tax_rate_name'))->toBe('Old');
     });
 
     it('cancels without saving', function () {
