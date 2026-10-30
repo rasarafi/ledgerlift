@@ -1,0 +1,84 @@
+# ledgerlift: legacy InvoicePlane v1.7.2 (:8091) and the new Laravel app (:8092)
+# on one MySQL server (:3317), each with its own database. Every database here
+# ends in `_test` -- see the destructive-command guard in AppServiceProvider.
+services:
+  mysql:
+    image: mysql:8.0
+    # MySQL 8's default sql_mode includes NO_ZERO_DATE, which InvoicePlane's
+    # 1.7.x migrations violate ("Incorrect DATE value: '0000-00-00'"). Upstream
+    # runs MariaDB 11, whose default mode omits NO_ZERO_DATE and NO_ZERO_IN_DATE;
+    # this mirrors that mode so one MySQL server can serve both apps.
+    command:
+      - --default-time-zone=+00:00
+      - --sql-mode=STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
+    environment:
+      MYSQL_ROOT_PASSWORD: ledgerlift
+      TZ: UTC
+    ports:
+      - "3317:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql-init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -pledgerlift --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # Upstream InvoicePlane, built unmodified from the v1.7.2 tag.
+  legacy:
+    build:
+      context: https://github.com/InvoicePlane/InvoicePlane.git#v1.7.2
+      dockerfile: resources/docker/Containerfile
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8091:80"
+    environment:
+      IP_URL: http://localhost:8091
+      DB_HOSTNAME: mysql
+      DB_PORT: "3306"
+      DB_USERNAME: root
+      DB_PASSWORD: ledgerlift
+      DB_DATABASE: ledgerlift_legacy_test
+      # TEST-ONLY key. It protects nothing: the legacy database holds fixtures.
+      # Never reuse it for a real install.
+      ENCRYPTION_KEY: bGVkZ2VybGlmdC10ZXN0LW9ubHktbGVnYWN5LWtleSE=
+      DEFAULT_ADMIN_EMAIL: admin@ledgerlift.test
+      DEFAULT_ADMIN_PASSWORD: ledgerlift-demo-1
+      DEFAULT_ADMIN_NAME: Ledgerlift Admin
+      LEGACY_CALCULATION: "true"
+      COOKIE_SECURE: "false"
+      TZ: UTC
+
+  new:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8092:8080"
+    environment:
+      APP_NAME: ledgerlift
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8092
+      # TEST-ONLY key, same caveat as the legacy ENCRYPTION_KEY above.
+      APP_KEY: base64:bGVkZ2VybGlmdC10ZXN0LW9ubHktYXBwLWtleS0wMDE=
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: ledgerlift_new_test
+      DB_USERNAME: root
+      DB_PASSWORD: ledgerlift
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stderr
+      TZ: UTC
+
+volumes:
+  mysql-data:
