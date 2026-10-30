@@ -3,6 +3,8 @@
 # `legacy` compose image into this app. Idempotent: reruns overwrite in place.
 set -euo pipefail
 
+command -v php >/dev/null || { echo "php required" >&2; exit 1; }
+
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 image="${LEGACY_IMAGE:-ledgerlift-legacy:latest}"
 www=/var/www/html
