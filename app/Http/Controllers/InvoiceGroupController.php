@@ -26,6 +26,9 @@ class InvoiceGroupController extends Controller
     /**
      * Invoice_groups::form() sets these on every pass of a new group's form, so a failed save
      * shows the defaults again instead of what was posted.
+     *
+     * @param  array<string, mixed>  $form
+     * @return array<string, mixed>
      */
     protected function newFormValues(array $form): array
     {

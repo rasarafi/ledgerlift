@@ -15,6 +15,7 @@ class InvoiceItemAmount extends Model
 
     protected $guarded = [];
 
+    /** @return BelongsTo<InvoiceItem, $this> */
     public function item(): BelongsTo
     {
         return $this->belongsTo(InvoiceItem::class, 'item_id');

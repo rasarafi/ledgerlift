@@ -34,16 +34,19 @@ class Product extends Model
             ->orderBy('ip_products.product_name');
     }
 
+    /** @return BelongsTo<Family, $this> */
     public function family(): BelongsTo
     {
         return $this->belongsTo(Family::class, 'family_id');
     }
 
+    /** @return BelongsTo<Unit, $this> */
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class, 'unit_id');
     }
 
+    /** @return BelongsTo<TaxRate, $this> */
     public function taxRate(): BelongsTo
     {
         return $this->belongsTo(TaxRate::class, 'tax_rate_id');

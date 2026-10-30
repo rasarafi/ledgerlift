@@ -15,6 +15,7 @@ class PaymentMethod extends Model
 
     protected $guarded = [];
 
+    /** @return HasMany<Payment, $this> */
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'payment_method_id');

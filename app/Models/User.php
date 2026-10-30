@@ -32,6 +32,7 @@ class User extends Authenticatable
         return '';
     }
 
+    /** @return HasMany<Invoice, $this> */
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class, 'user_id');

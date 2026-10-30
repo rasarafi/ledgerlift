@@ -194,7 +194,7 @@ final class XssClean
 
                 foreach (array_unique(array_map('strtolower', $found[0])) as $entity) {
                     if (($char = array_search($entity.';', $entities, true)) !== false) {
-                        $replace[$entity] = $char;
+                        $replace[$entity] = (string) $char;
                     }
                 }
 

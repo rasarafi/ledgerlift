@@ -36,7 +36,7 @@ trait HandlesLegacyCrud
         $total = (clone $query)->count();
         $pager = new LegacyPager((int) $offset, LegacyPager::defaultPerPage(), $total);
 
-        return view($this->module.'.index', [
+        return view($this->viewName('index'), [
             'rows' => $query->offset($pager->offset)->limit($pager->perPage)->get(),
             'pager' => $pager,
         ] + $this->indexData());
@@ -77,7 +77,21 @@ trait HandlesLegacyCrud
             $form = $this->newFormValues($form);
         }
 
-        return view($this->module.'.form', ['form' => $form] + $this->formData())->withErrors($errors ?? []);
+        return view($this->viewName('form'), ['form' => $form] + $this->formData())->withErrors($errors ?? []);
+    }
+
+    /**
+     * `<module>.<name>`. A concatenation is not a view-string to PHPStan, which only knows the
+     * names that appear as literals; these resolve per controller.
+     *
+     * @return view-string
+     */
+    private function viewName(string $name): string
+    {
+        /** @var view-string $view */
+        $view = sprintf('%s.%s', $this->module, $name);
+
+        return $view;
     }
 
     /** Response_Model::delete() */
@@ -175,7 +189,7 @@ trait HandlesLegacyCrud
 
         $exists = $this->model::query()->where($guard['column'], $request->post($guard['column']))->exists();
 
-        return $exists ? __('ip.'.$guard['message']) : null;
+        return $exists ? (string) __('ip.'.$guard['message']) : null;
     }
 
     private function keyName(): string

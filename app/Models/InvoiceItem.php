@@ -16,16 +16,19 @@ class InvoiceItem extends Model
 
     protected $guarded = [];
 
+    /** @return BelongsTo<Invoice, $this> */
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class, 'invoice_id');
     }
 
+    /** @return HasOne<InvoiceItemAmount, $this> */
     public function amount(): HasOne
     {
         return $this->hasOne(InvoiceItemAmount::class, 'item_id');
     }
 
+    /** @return BelongsTo<TaxRate, $this> */
     public function taxRate(): BelongsTo
     {
         return $this->belongsTo(TaxRate::class, 'item_tax_rate_id');

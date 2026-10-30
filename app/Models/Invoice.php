@@ -28,36 +28,43 @@ class Invoice extends Model
 
     protected $guarded = [];
 
+    /** @return BelongsTo<Client, $this> */
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class, 'client_id');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /** @return BelongsTo<InvoiceGroup, $this> */
     public function group(): BelongsTo
     {
         return $this->belongsTo(InvoiceGroup::class, 'invoice_group_id');
     }
 
+    /** @return HasMany<InvoiceItem, $this> */
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class, 'invoice_id');
     }
 
+    /** @return HasOne<InvoiceAmount, $this> */
     public function amount(): HasOne
     {
         return $this->hasOne(InvoiceAmount::class, 'invoice_id');
     }
 
+    /** @return HasMany<InvoiceTaxRate, $this> */
     public function taxRates(): HasMany
     {
         return $this->hasMany(InvoiceTaxRate::class, 'invoice_id');
     }
 
+    /** @return HasMany<Payment, $this> */
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'invoice_id');

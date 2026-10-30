@@ -15,6 +15,7 @@ class InvoiceGroup extends Model
 
     protected $guarded = [];
 
+    /** @return HasMany<Invoice, $this> */
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class, 'invoice_group_id');

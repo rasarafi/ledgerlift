@@ -23,6 +23,7 @@ class FamilyController extends Controller
     /** @var array{column: string, requires: list<string>, message: string}|null */
     protected ?array $uniqueGuard = ['column' => 'family_name', 'requires' => ['family_name'], 'message' => 'family_already_exists'];
 
+    /** @return array<string, mixed> */
     protected function indexData(): array
     {
         return ['filterDisplay' => true, 'filterPlaceholder' => __('ip.filter_families'), 'filterMethod' => 'filter_families'];

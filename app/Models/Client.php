@@ -17,6 +17,7 @@ class Client extends Model
 
     protected $guarded = [];
 
+    /** @return HasMany<Invoice, $this> */
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class, 'client_id');
@@ -41,18 +42,24 @@ class Client extends Model
      */
     public function scopeWithInvoiceTotals(Builder $query, bool $total = false, bool $paid = false): void
     {
-        $sum = fn (string $column, string $alias) => DB::raw(
-            "IFnull((SELECT SUM($column) FROM ip_invoice_amounts WHERE invoice_id IN (SELECT invoice_id FROM ip_invoices WHERE ip_invoices.client_id = ip_clients.client_id)), 0) AS $alias"
-        );
-
         if ($total) {
-            $query->addSelect($sum('invoice_total', 'client_invoice_total'));
+            $query->selectRaw(self::invoiceSum('invoice_total', 'client_invoice_total'));
         }
 
-        $query->addSelect($sum('invoice_balance', 'client_invoice_balance'));
+        $query->selectRaw(self::invoiceSum('invoice_balance', 'client_invoice_balance'));
 
         if ($paid) {
-            $query->addSelect($sum('invoice_paid', 'client_invoice_paid'));
+            $query->selectRaw(self::invoiceSum('invoice_paid', 'client_invoice_paid'));
         }
+    }
+
+    /**
+     * @param  literal-string  $column
+     * @param  literal-string  $alias
+     * @return literal-string
+     */
+    private static function invoiceSum(string $column, string $alias): string
+    {
+        return "IFnull((SELECT SUM($column) FROM ip_invoice_amounts WHERE invoice_id IN (SELECT invoice_id FROM ip_invoices WHERE ip_invoices.client_id = ip_clients.client_id)), 0) AS $alias";
     }
 }

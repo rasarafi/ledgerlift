@@ -27,6 +27,9 @@ class TaxRateController extends Controller
     /**
      * Tax_rates::form() stores the percent through standardize_amount(), so the decimal
      * point of the user's settings becomes SQL's (IPT-310).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
      */
     protected function normalised(array $data): array
     {

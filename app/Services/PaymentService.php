@@ -97,7 +97,8 @@ final class PaymentService
     {
         $data = $input;
         $data['payment_date'] = $this->dates->toMysql((string) ($data['payment_date'] ?? ''));
-        $data['payment_amount'] = $this->numberFormat->standardize(is_scalar($data['payment_amount'] ?? null) ? $data['payment_amount'] : null);
+        $amount = $data['payment_amount'] ?? null;
+        $data['payment_amount'] = $this->numberFormat->standardize(is_string($amount) || is_int($amount) || is_float($amount) ? $amount : null);
 
         if ($paymentId) {
             DB::table('ip_payments')->where('payment_id', $paymentId)->update($data);

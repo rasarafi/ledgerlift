@@ -16,11 +16,13 @@ class Payment extends Model
 
     protected $guarded = [];
 
+    /** @return BelongsTo<Invoice, $this> */
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class, 'invoice_id');
     }
 
+    /** @return BelongsTo<PaymentMethod, $this> */
     public function method(): BelongsTo
     {
         return $this->belongsTo(PaymentMethod::class, 'payment_method_id');

@@ -51,6 +51,14 @@ services:
       LEGACY_CALCULATION: "true"
       COOKIE_SECURE: "false"
       TZ: UTC
+    # The container migrates the database on every start, so the login page only
+    # answers once that has finished. `up --wait` blocks on this.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://localhost/sessions/login"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
 
   new:
     build:
@@ -81,6 +89,12 @@ services:
       QUEUE_CONNECTION: sync
       LOG_CHANNEL: stderr
       TZ: UTC
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://localhost:8080/up"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
 
 volumes:
   mysql-data:

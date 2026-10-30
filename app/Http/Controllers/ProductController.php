@@ -51,6 +51,9 @@ class ProductController extends Controller
     /**
      * Mdl_products::db_array(): prices go through standardize_amount() and an empty price,
      * family, unit or tax rate is NULL; the keys are set even when the post lacks them.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
      */
     protected function normalised(array $data): array
     {

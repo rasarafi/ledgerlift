@@ -11,7 +11,7 @@ final class Strangler
     public static function url(string $path): string
     {
         $path = ltrim($path, '/');
-        $module = preg_split('#[/?\#]#', $path)[0];
+        $module = (preg_split('#[/?\#]#', $path) ?: [''])[0];
 
         if (in_array($module, config('ledgerlift.migrated_modules'), true)) {
             return url($path);

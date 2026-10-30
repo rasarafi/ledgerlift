@@ -1,0 +1,182 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: "8.4"
+
+jobs:
+  quality:
+    name: Pint and Larastan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Get the Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Pint
+        run: ./vendor/bin/pint --test
+
+      - name: Larastan
+        run: ./vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+  tests:
+    name: Unit and Feature tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ledgerlift
+          MYSQL_DATABASE: ledgerlift_test
+          TZ: UTC
+        # phpunit.xml points the suite at 127.0.0.1:3317, the port compose.yaml publishes.
+        ports:
+          - 3317:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -pledgerlift --silent"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      # TEST-ONLY key: it protects nothing, the database holds fixtures.
+      APP_KEY: base64:bGVkZ2VybGlmdC10ZXN0LW9ubHktYXBwLWtleS0wMDE=
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Get the Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      # compose.yaml starts mysql with these two flags; a service container cannot take
+      # command arguments, so the same settings are applied to the running server. The
+      # tests open their connections afterwards, so they see them.
+      - name: Match the MySQL settings of compose.yaml
+        run: |
+          mysql --protocol=tcp -h 127.0.0.1 -P 3317 -uroot -pledgerlift -e "
+            SET GLOBAL sql_mode = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+            SET GLOBAL time_zone = '+00:00';"
+
+      - name: Pest (Unit and Feature)
+        run: ./vendor/bin/pest
+
+  parity:
+    name: Schema and parity against InvoicePlane v1.7.2
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # TEST-ONLY key: it protects nothing, the database holds fixtures.
+      APP_KEY: base64:bGVkZ2VybGlmdC10ZXN0LW9ubHktYXBwLWtleS0wMDE=
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Get the Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      # Builds legacy from the upstream v1.7.2 tag and the new app from the Dockerfile, then
+      # waits for the healthchecks in compose.yaml: legacy installs itself on first start.
+      - name: Start the stack
+        run: docker compose up -d --build --wait --wait-timeout 600
+
+      # Schema and Parity run first, before anything logs into legacy: the Schema suite
+      # snapshots the legacy database as the installer left it (Tests\Support\Pristine),
+      # and a login writes to it.
+      - name: Schema suite
+        run: composer schema
+
+      - name: Parity suite
+        run: composer parity -- --log-junit "$RUNNER_TEMP/parity-junit.xml"
+
+      - name: Summary
+        if: success()
+        run: |
+          scenarios=$(python3 - "$RUNNER_TEMP/parity-junit.xml" <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          suite = ET.parse(sys.argv[1]).getroot()
+          if suite.tag == "testsuites":
+              suite = suite[0]
+          print(int(suite.get("tests")) - int(suite.get("skipped", 0)))
+          PY
+          )
+          intentional=$(php -r 'echo count(require "tests/Parity/intentional-differences.php");')
+          known_lines=$(wc -l < tests/Parity/known-differences.md)
+          known_entries=$(grep -c '^- ' tests/Parity/known-differences.md)
+          {
+            echo "### Parity against InvoicePlane v1.7.2"
+            echo
+            echo "- Scenarios run: ${scenarios}"
+            echo "- Differences: 0"
+            echo "- Intentional database differences (tests/Parity/intentional-differences.php): ${intentional}"
+            echo "- Known differences outside the database (tests/Parity/known-differences.md): ${known_entries} entries, ${known_lines} lines"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Container logs
+        if: failure()
+        run: docker compose logs --no-color --tail 200 legacy new
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down
